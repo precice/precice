@@ -175,7 +175,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
   PRECICE_ASSERT(not _mesh->empty(), _mesh->getName());
   VertexMatch match;
   const auto &rtree = _pimpl->getVertexRTree(*_mesh);
-  rtree->query(bgi::nearest(sourceCoord, 1), boost::make_function_output_iterator([&](size_t matchID) {
+  rtree->query(bgi::nearest(eigenToRaw(sourceCoord), 1), boost::make_function_output_iterator([&](size_t matchID) {
                  match = VertexMatch(matchID);
                }));
   return match;
@@ -188,7 +188,7 @@ std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoo
   std::vector<VertexID> matches;
   const auto           &rtree = _pimpl->getVertexRTree(*_mesh);
 
-  rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
+  rtree->query(bgi::nearest(eigenToRaw(sourceCoord), n), boost::make_function_output_iterator([&](size_t matchID) {
                  matches.emplace_back(matchID);
                }));
   return matches;
@@ -202,7 +202,7 @@ std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord
 
   std::vector<EdgeMatch> matches;
   matches.reserve(n);
-  rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
+  rtree->query(bgi::nearest(eigenToRaw(sourceCoord), n), boost::make_function_output_iterator([&](size_t matchID) {
                  matches.emplace_back(matchID);
                }));
   return matches;
@@ -215,7 +215,7 @@ std::vector<TriangleMatch> Index::getClosestTriangles(const Eigen::VectorXd &sou
 
   std::vector<TriangleMatch> matches;
   matches.reserve(n);
-  rtree->query(bgi::nearest(sourceCoord, n),
+  rtree->query(bgi::nearest(eigenToRaw(sourceCoord), n),
                boost::make_function_output_iterator([&](TriangleTraits::IndexType const &match) {
                  matches.emplace_back(match.second);
                }));
@@ -268,7 +268,7 @@ std::vector<TetrahedronID> Index::getEnclosingTetrahedra(const Eigen::VectorXd &
   const auto &rtree = _pimpl->getTetraRTree(*_mesh);
 
   std::vector<TetrahedronID> matches;
-  rtree->query(bgi::covers(location), boost::make_function_output_iterator([&](TetrahedronTraits::IndexType const &match) {
+  rtree->query(bgi::covers(eigenToRaw(location)), boost::make_function_output_iterator([&](TetrahedronTraits::IndexType const &match) {
                  matches.emplace_back(match.second);
                }));
   return matches;
