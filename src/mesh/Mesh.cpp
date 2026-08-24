@@ -364,8 +364,7 @@ void Mesh::addMesh(
     coords    = vertex.getCoords();
     Vertex &v = createVertex(coords);
     v.setGlobalIndex(vertex.getGlobalIndex());
-    if (vertex.isTagged())
-      v.tag();
+    v.setTagged(vertex.isTagged());
     v.setOwner(vertex.isOwner());
     PRECICE_ASSERT(vertex.getID() >= 0, vertex.getID());
     vertexMap[vertex.getID()] = &v;

@@ -32,8 +32,7 @@ void filterMeshWithConnectivity(Mesh &destination, const Mesh &source, UnaryPred
     if (p(vertex)) {
       Vertex &v = destination.createVertex(vertex.getCoords());
       v.setGlobalIndex(vertex.getGlobalIndex());
-      if (vertex.isTagged())
-        v.tag();
+      v.setTagged(vertex.isTagged());
       v.setOwner(vertex.isOwner());
       vertexMap[vertex.getID()] = &v;
     }
@@ -91,8 +90,7 @@ void filterMeshWithoutConnectivity(Mesh &destination, const Mesh &source, UnaryP
     if (p(vertex)) {
       Vertex &v = destination.createVertex(vertex.getCoords());
       v.setGlobalIndex(vertex.getGlobalIndex());
-      if (vertex.isTagged())
-        v.tag();
+      v.setTagged(vertex.isTagged());
       v.setOwner(vertex.isOwner());
     }
   }
