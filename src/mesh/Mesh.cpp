@@ -353,7 +353,7 @@ void Mesh::tagAll()
 }
 
 void Mesh::addMesh(
-    Mesh &deltaMesh)
+    const Mesh &deltaMesh)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_dimensions == deltaMesh.getDimensions());
