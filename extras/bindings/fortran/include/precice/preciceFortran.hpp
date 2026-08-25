@@ -505,7 +505,7 @@ PRECICE_API void precicef_set_mesh_tetrahedron_(
  * @brief @deprecated Use precicef_set_mesh_tetrahedron_() instead.
  * @see precicef_set_mesh_tetrahedron_
  */
-PRECICE_API void precicef_set_tetrahedron(
+PRECICE_API void precicef_set_tetrahedron_(
     const char *meshName,
     const int  *firstVertexID,
     const int  *secondVertexID,

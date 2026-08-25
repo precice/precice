@@ -616,7 +616,7 @@ void precicef_set_quad_(
   precicef_set_mesh_quad_(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID, meshNameLength);
 }
 
-void precicef_set_tetrahedron(
+void precicef_set_tetrahedron_(
     const char *meshName,
     const int  *firstVertexID,
     const int  *secondVertexID,
