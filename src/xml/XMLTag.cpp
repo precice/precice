@@ -210,10 +210,9 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
         fmt::format("The tag <{}> in the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, name, fmt::join(expected, ", "))));
   }
 
-  
   for (auto &attribute : _attributes) {
     std::visit(
-        [&aAttributes, this](auto &attribute) { attribute.readValue(aAttributes, this); },
+        [&aAttributes, this](auto &attribute) { attribute.readValue(aAttributes, _line, _column, _sourceLine); },
         attribute);
   }
 }
@@ -314,11 +313,11 @@ std::string_view XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)
   return "";
 }
 
-void XMLTag::setLocation(int line, int column, const std::string *contentPtr)
+void XMLTag::setLocation(int line, int column, std::string sourceLine)
 {
-  _line = line;
-  _column = column;
-  _contentPtr = contentPtr;
+  _line       = line;
+  _column     = column;
+  _sourceLine = std::move(sourceLine);
 }
 
 int XMLTag::getLine() const
@@ -333,41 +332,12 @@ int XMLTag::getColumn() const
 
 bool XMLTag::hasLocation() const
 {
-  return _line >= 0;
-}
-
-std::string XMLTag::getLocationContext() const
-{
-  if (!hasLocation() || _contentPtr == nullptr) {
-    return std::string();
-  }
-  std::istringstream iss(*_contentPtr);
-  std::string lineStr;
-  for (int i = 1; i <= _line && std::getline(iss, lineStr); ++i) {
-  }
-  std::string result = std::to_string(_line) + " | " + lineStr + "\n";
-  if (_column > 0) {
-    result += std::string(_column - 1, ' ') + "^";
-  }
-  return result;
+  return _line > 0;
 }
 
 std::string XMLTag::formatMessage(std::string_view message) const
 {
-  std::string out{message};
-  if (hasLocation()) {
-    std::string location = getLocationContext();
-    std::string escapedLocation;
-    escapedLocation.reserve(location.capacity());
-    for (char c : location) {
-      if (c == '{' || c == '}') {
-        escapedLocation += c;
-      }
-      escapedLocation += c;
-    }
-    out += "\n" + escapedLocation;
-  }
-  return out;
+  return utils::appendLocation(message, _line, _column, _sourceLine);
 }
 
 } // namespace precice::xml

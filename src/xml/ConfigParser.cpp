@@ -5,7 +5,6 @@
 #include <iterator>
 #include <libxml/SAX2.h>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -69,13 +68,7 @@ void OnStartElementNs(
 
   std::string_view sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
 
-
-  int line   = -1;
-  int column = -1;
-  if (pParser && pParser->m_parserCtxt) {
-    line   = xmlSAX2GetLineNumber(pParser->m_parserCtxt);
-    column = xmlSAX2GetColumnNumber(pParser->m_parserCtxt);
-  }
+  const auto [line, column] = pParser->currentParserPosition();
 
   pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap, line, column);
 }
@@ -105,7 +98,9 @@ void OnStructuredErrorFunc(void *userData, const xmlError *error)
     return;
   }
 
-  ConfigParser::MessageProxy(error->level, message);
+  auto pParser              = static_cast<ConfigParser *>(userData);
+  const auto [line, column] = pParser->currentParserPosition();
+  pParser->reportParserMessage(error->level, message, line, column);
 }
 
 // Required for versions before 2.12.0 of libxml
@@ -116,19 +111,46 @@ void OnStructuredErrorFunc(void *userData, xmlError *error)
 
 void OnErrorFunc(void *userData, const char *error, ...)
 {
-  ConfigParser::MessageProxy(XML_ERR_ERROR, error);
+  auto pParser              = static_cast<ConfigParser *>(userData);
+  const auto [line, column] = pParser->currentParserPosition();
+  pParser->reportParserMessage(XML_ERR_ERROR, error, line, column);
 }
 
 void OnFatalErrorFunc(void *userData, const char *error, ...)
 {
-  ConfigParser::MessageProxy(XML_ERR_FATAL, error);
+  auto pParser              = static_cast<ConfigParser *>(userData);
+  const auto [line, column] = pParser->currentParserPosition();
+  pParser->reportParserMessage(XML_ERR_FATAL, error, line, column);
 }
+
+namespace {
+/// Splits content into lines, dropping a trailing '\r' from each line (to support CRLF files).
+std::vector<std::string> splitLines(std::string_view content)
+{
+  std::vector<std::string> lines;
+  std::size_t              start = 0;
+  while (start <= content.size()) {
+    std::size_t end = content.find('\n', start);
+    if (end == std::string_view::npos) {
+      end = content.size();
+    }
+    std::string_view line = content.substr(start, end - start);
+    if (!line.empty() && line.back() == '\r') {
+      line.remove_suffix(1);
+    }
+    lines.emplace_back(line);
+    if (end == content.size()) {
+      break;
+    }
+    start = end + 1;
+  }
+  return lines;
+}
+} // namespace
 
 // ------------------------- ConfigParser implementation  -------------------------
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
-
-ConfigParser *ConfigParser::s_currentInstance = nullptr;
 
 ConfigParser::ConfigParser(std::string_view filePath, const ConfigurationContext &context, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
     : m_pXmlTag(std::move(pXmlTag))
@@ -155,22 +177,26 @@ ConfigParser::ConfigParser(std::string_view filePath)
   readXmlFile(std::string(filePath));
 }
 
-void ConfigParser::MessageProxy(int level, std::string_view mess)
+std::pair<int, int> ConfigParser::currentParserPosition() const
 {
-  if (s_currentInstance && s_currentInstance->m_parserCtxt) {
-    int line   = xmlSAX2GetLineNumber(s_currentInstance->m_parserCtxt);
-    int column = xmlSAX2GetColumnNumber(s_currentInstance->m_parserCtxt);
-    std::string snippet;
-    if (!s_currentInstance->m_content.empty() && line > 0) {
-      std::istringstream iss(s_currentInstance->m_content);
-      std::string lineStr;
-      for (int i = 1; i <= line && std::getline(iss, lineStr); ++i) {
-      }
-      snippet = "\n" + std::to_string(line) + " | " + lineStr +
-                "\n   | " + std::string(std::max(0, column - 1), ' ') + "^";
-    }
-    mess = fmt::format("{} (line {} column {}){}", mess, line, column, snippet);
+  if (!m_parserCtxt) {
+    return {-1, -1};
   }
+  return {static_cast<int>(xmlSAX2GetLineNumber(m_parserCtxt)),
+          static_cast<int>(xmlSAX2GetColumnNumber(m_parserCtxt))};
+}
+
+std::string_view ConfigParser::sourceLine(int line) const
+{
+  if (line <= 0 || static_cast<std::size_t>(line) > m_lines.size()) {
+    return {};
+  }
+  return m_lines[line - 1];
+}
+
+void ConfigParser::reportParserMessage(int level, std::string_view message, int line, int column) const
+{
+  std::string mess = utils::appendLocation(message, line, column, sourceLine(line));
 
   switch (level) {
   case (XML_ERR_FATAL):
@@ -213,19 +239,17 @@ int ConfigParser::readXmlFile(std::string const &filePath)
 
   _hash = utils::preciceHash(content);
 
-  m_content = content;
+  // XML files are generally small, so keep the lines around for error context.
+  m_lines = splitLines(content);
 
   xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
                                                   content.c_str(), content.size(), nullptr);
 
-  s_currentInstance = this;
-  m_parserCtxt      = ctxt;
+  m_parserCtxt = ctxt;
 
   xmlParseChunk(ctxt, nullptr, 0, 1);
 
-  m_parserCtxt      = nullptr;
-  s_currentInstance = nullptr;
-  m_content.clear();
+  m_parserCtxt = nullptr;
 
   xmlFreeParserCtxt(ctxt);
   xmlCleanupParser();
@@ -279,7 +303,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 
       std::string loc;
       if (subtag->m_Line > 0) {
-        loc = fmt::format(" (line {} column {})", subtag->m_Line, subtag->m_Column);
+        loc = fmt::format(" (line {}, column {})", subtag->m_Line, subtag->m_Column);
       }
 
       auto matches = utils::computeMatches(expectedName, names);
@@ -294,7 +318,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
     }
 
     auto pDefSubTag = *tagPosition;
-    pDefSubTag->setLocation(subtag->m_Line, subtag->m_Column, &m_content);
+    pDefSubTag->setLocation(subtag->m_Line, subtag->m_Column, std::string(sourceLine(subtag->m_Line)));
 
     pDefSubTag->resetAttributes();
 

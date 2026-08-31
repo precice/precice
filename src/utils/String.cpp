@@ -106,4 +106,23 @@ bool isKebabStyle(std::string_view sv)
   return sv.empty() || std::regex_match(sv.begin(), sv.end(), kebabCaseRegex);
 }
 
+std::string appendLocation(std::string_view message, int line, int column, std::string_view sourceLine)
+{
+  if (line <= 0) {
+    return std::string(message);
+  }
+
+  std::string result(message);
+  result += " (line " + std::to_string(line) + ", column " + std::to_string(column) + ")";
+
+  if (!sourceLine.empty()) {
+    std::string prefix = std::to_string(line) + " | ";
+    result += "\n" + prefix + std::string(sourceLine);
+    if (column > 0) {
+      result += "\n" + std::string(prefix.size() + column - 1, ' ') + "^";
+    }
+  }
+  return result;
+}
+
 } // namespace precice::utils

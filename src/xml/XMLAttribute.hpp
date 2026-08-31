@@ -13,7 +13,6 @@
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ValueParser.hpp"
-#include "xml/XMLTag.hpp"
 
 namespace precice::xml {
 
@@ -79,9 +78,19 @@ public:
     return _hasValidation;
   };
 
+  /**
+   * @brief Reads the value of this attribute from the given attribute map.
+   *
+   * @param[in] aAttributes the attributes of the tag this attribute belongs to.
+   * @param[in] line 1-based line of the enclosing tag, or -1 if unknown; used to annotate error messages.
+   * @param[in] column 1-based column of the enclosing tag, or -1 if unknown.
+   * @param[in] sourceLine the source text of that line, used to annotate error messages.
+   */
   void readValue(
       const std::map<std::string, std::string> &aAttributes,
-      const XMLTag *tag = nullptr);
+      int                                        line       = -1,
+      int                                        column     = -1,
+      std::string_view                           sourceLine = {});
 
   const std::string &getName() const
   {
@@ -162,8 +171,10 @@ XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTR
 
 template <typename ATTRIBUTE_T>
 void XMLAttribute<ATTRIBUTE_T>::readValue(
-   const std::map<std::string, std::string> &aAttributes,
-   const XMLTag *tag = nullptr)
+    const std::map<std::string, std::string> &aAttributes,
+    int                                        line,
+    int                                        column,
+    std::string_view                           sourceLine)
 {
   PRECICE_TRACE(_name);
   PRECICE_ASSERT(!_read, "Attribute \"" + _name + "\" has already been read.");
@@ -171,10 +182,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(
   const auto position = aAttributes.find(getName());
 
   auto addLocation = [&](const std::string &m) {
-    if (tag) {
-      return tag->formatMessage(m);
-    }
-    return m;
+    return utils::appendLocation(m, line, column, sourceLine);
   };
 
   if (position == aAttributes.end()) {

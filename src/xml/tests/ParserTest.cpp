@@ -258,7 +258,9 @@ BOOST_AUTO_TEST_CASE(LocationInformation)
   configure(rootTag, ConfigurationContext{}, filename);
 
   BOOST_TEST(listener.fooLine == 3);
-  BOOST_TEST(listener.fooColumn == 3);
+  // libxml2 reports the column where parsing of the start tag finished (i.e. after its
+  // attributes), not the column of the opening '<'.
+  BOOST_TEST(listener.fooColumn == 19);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -280,6 +282,26 @@ BOOST_AUTO_TEST_CASE(LocationErrorMessage)
   } catch (const Error &e) {
     std::string msg = e.what();
     BOOST_TEST(msg.find("line 3") != std::string::npos);
+  }
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(MalformedXmlErrorMessage)
+{
+  PRECICE_TEST();
+  std::string filename(getPathToSources() + "/xml/tests/xmlparser_malformed.xml");
+
+  // The file contains a duplicated attribute, which libxml2 itself rejects
+  // while parsing, before the tags are ever connected to the definitions below.
+  XMLTag root = getRootTag();
+
+  try {
+    configure(root, ConfigurationContext{}, filename);
+    BOOST_FAIL("configuration should have thrown");
+  } catch (const Error &e) {
+    std::string msg = e.what();
+    BOOST_TEST(msg.find("line 3") != std::string::npos);
+    BOOST_TEST(msg.find("attr=\"bar\" attr=\"baz\"") != std::string::npos);
   }
 }
 
