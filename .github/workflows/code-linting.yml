@@ -21,14 +21,14 @@ concurrency:
 jobs:
   clang-tidy:
     runs-on: ubuntu-latest
-    container: 'precice/ci-ubuntu-2204:latest'
+    container: 'precice/ci-ubuntu-2604:latest'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: fetch clang
         run: apt update && apt install -y clang && apt install -y clang-tidy
       - name: run clang-tidy
-        run: tools/linting/run_clang_tidy.sh
-      - uses: actions/upload-artifact@v6
+        run: tools/linting/run_clang_tidy.sh .
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: clang-tidy.log

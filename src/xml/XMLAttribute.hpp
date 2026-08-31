@@ -81,12 +81,14 @@ public:
   /**
    * @brief Reads the value of this attribute from the given attribute map.
    *
+   * @param[in] tagName the full name of the tag this attribute belongs to, used to annotate error messages.
    * @param[in] aAttributes the attributes of the tag this attribute belongs to.
    * @param[in] line 1-based line of the enclosing tag, or -1 if unknown; used to annotate error messages.
    * @param[in] column 1-based column of the enclosing tag, or -1 if unknown.
    * @param[in] sourceLine the source text of that line, used to annotate error messages.
    */
   void readValue(
+      std::string_view                           tagName,
       const std::map<std::string, std::string> &aAttributes,
       int                                        line       = -1,
       int                                        column     = -1,
@@ -171,6 +173,7 @@ XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTR
 
 template <typename ATTRIBUTE_T>
 void XMLAttribute<ATTRIBUTE_T>::readValue(
+    std::string_view                           tagName,
     const std::map<std::string, std::string> &aAttributes,
     int                                        line,
     int                                        column,
@@ -187,7 +190,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(
 
   if (position == aAttributes.end()) {
     if (!_hasDefaultValue) {
-      PRECICE_ERROR(addLocation(fmt::format("Attribute \"{}\" is required, but was not defined.", _name)));
+      PRECICE_ERROR(addLocation(fmt::format("The tag <{}> in the configuration is missing required attribute \"{}\".", tagName, _name)));
     }
     set(_value, _defaultValue);
   } else {

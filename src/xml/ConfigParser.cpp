@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <exception>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <libxml/SAX2.h>
@@ -11,6 +12,7 @@
 
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "profiling/Event.hpp"
 #include "utils/Hash.hpp"
 #include "utils/String.hpp"
 #include "xml/ConfigParser.hpp"
@@ -216,6 +218,31 @@ std::string ConfigParser::hash() const
   return _hash;
 }
 
+std::string ConfigParser::readFileContent(std::string const &filePath) const
+{
+  // We get the filesystem, preallocate a string and then read the entire file in one go.
+  profiling::Event e("readConfiguration", profiling::Fundamental);
+
+  std::ifstream ifs{filePath};
+  PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"{}\"", filePath);
+
+#ifdef _WIN32
+  // On windows, the returned file_size is an upper bound. So we have to read buffered here.
+  std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
+#else
+  std::error_code ec;
+  auto            size = std::filesystem::file_size(filePath, ec);
+  PRECICE_CHECK(!ec, "XML parser was unable to get the size of the configuration file \"{}\": {}", filePath, ec.message());
+
+  std::string content(size, '\0');
+  ifs.read(content.data(), size);
+#endif
+
+  PRECICE_CHECK(!content.empty(), "The configuration file \"{}\" is empty.", filePath);
+
+  return content;
+}
+
 int ConfigParser::readXmlFile(std::string const &filePath)
 {
   xmlSAXHandler SAXHandler;
@@ -230,29 +257,25 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.error          = OnErrorFunc;
   SAXHandler.fatalError     = OnFatalErrorFunc;
 
-  std::ifstream ifs{filePath};
-  PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"{}\"", filePath);
-
-  std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
-
-  PRECICE_CHECK(!content.empty(), "The configuration file \"{}\" is empty.", filePath);
+  auto content = readFileContent(filePath);
 
   _hash = utils::preciceHash(content);
 
   // XML files are generally small, so keep the lines around for error context.
   m_lines = splitLines(content);
 
-  xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
-                                                  content.c_str(), content.size(), nullptr);
+  auto ctxt = std::unique_ptr<xmlParserCtxt, void (*)(xmlParserCtxtPtr)>(
+      xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
+                              content.c_str(), content.size(), nullptr),
+      xmlFreeParserCtxt);
 
-  m_parserCtxt = ctxt;
+  PRECICE_CHECK(ctxt != nullptr, "XML parser was unable to create a push parser context for file \"{}\"", filePath);
 
-  xmlParseChunk(ctxt, nullptr, 0, 1);
+  m_parserCtxt = ctxt.get();
+
+  xmlParseChunk(ctxt.get(), nullptr, 0, 1);
 
   m_parserCtxt = nullptr;
-
-  xmlFreeParserCtxt(ctxt);
-  xmlCleanupParser();
 
   return 0;
 }

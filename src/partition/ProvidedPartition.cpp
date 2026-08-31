@@ -162,7 +162,7 @@ void ProvidedPartition::prepare()
     if (std::any_of(_m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); }) && utils::IntraComm::isPrimary()) {
       PRECICE_DEBUG("Fill vertex distribution");
       PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
-      /// @TODO are these distributions allowed to contain verices already?
+      /// @TODO are these distributions allowed to contain vertices already?
       mesh::Mesh::VertexDistribution vertexDistribution;
       auto                          &localIds = vertexDistribution[0];
       localIds.resize(vertexOffsets[0]);

@@ -137,7 +137,9 @@ BOOST_AUTO_TEST_CASE(testQRFactorization)
 
   // ------------ reset ----------------------------
   qr_1.reset();
-  qr_1.reset(A, A.rows());
+  auto notAddedCols = qr_1.reset(A, A.rows());
+  // notAddedCols is empty in this test setting so no further action to it is needed
+
   testQTQequalsIdentity(qr_1.matrixQ());
   // test if QR equals A
   testQRequalsA(qr_1.matrixQ(), qr_1.matrixR(), A);

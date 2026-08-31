@@ -137,7 +137,6 @@ target_sources(preciceCore
     src/io/ExportVTU.hpp
     src/io/ExportXML.cpp
     src/io/ExportXML.hpp
-    src/io/SharedPointer.hpp
     src/io/TXTReader.cpp
     src/io/TXTReader.hpp
     src/io/TXTTableWriter.cpp
@@ -299,7 +298,6 @@ target_sources(preciceCore
     src/time/Sample.hpp
     src/time/SampleResult.hpp
     src/time/Stample.hpp
-    src/time/Time.cpp
     src/time/Time.hpp
     src/time/TimeGrids.cpp
     src/time/TimeGrids.hpp

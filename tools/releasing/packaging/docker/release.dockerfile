@@ -1,17 +1,27 @@
 # Dockerfile to build a ubuntu image containing the installed Debian package of a release
+#
+# The build context must include the debian packages of the release
+# Use gh release download vX.Y.Z
 
+# Update the following two lines when bumping the base version.
 FROM ubuntu:24.04
+ENV CODENAME=noble
+
 # Add the precice user
 RUN useradd -m -s /bin/bash precice
+
+# Copy all debian packages from the build context.
+COPY ./libprecice*.deb /debs/
+
 # Fix the installation of tzdata for Ubuntu
 ARG TIMEZONE=Europe/Berlin
-RUN export TZ=$TIMEZONE && echo $TZ > /etc/timezone && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-    apt-get -yy update && apt-get -yy install wget tzdata lsb-release && rm -rf /var/lib/apt/lists/*
-# The version to fetch the package for: X.Y.Z
-ARG version
-RUN echo "$version" | grep "[0-9]\+\.[0-9]\+\.[0-9]\+" > /dev/null # The version must follow the format X.Y.Z
-RUN wget -q -O libprecice.deb https://github.com/precice/precice/releases/download/v${version}/libprecice`echo ${version} | sed 's/\([0-9]\+\)\.\([0-9]\+\.[0-9]\+\)/\1_\1.\2/'`_$(lsb_release -sc).deb && \
-    apt-get update && apt-get -yy install ./libprecice.deb && \
-    rm libprecice.deb && rm -rf /var/lib/apt/lists/*
+ENV TZ=${TIMEZONE}
+
+# Install tzdata and the matching debian package and cleanup
+RUN echo ${TZ} > /etc/timezone && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    apt-get -yy update && apt-get -yy install tzdata wget && \
+    apt-get -yy install /debs/libprecice*_${CODENAME}.deb && \
+    rm -rf /var/lib/apt/lists/* /debs
+
 # Make sure the installation is functional
-RUN precice-tools version
+RUN precice-version

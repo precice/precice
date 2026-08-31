@@ -73,8 +73,12 @@ void MeshConfiguration::xmlTagCallback(
     bool        found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
       auto dataDimensions = getDataDimensions(_meshes.back()->getName(), data.typeName);
+      auto lowerBound     = data.lowerBound;
+      auto upperBound     = data.upperBound;
+      lowerBound.resize(dataDimensions);
+      upperBound.resize(dataDimensions);
       if (data.name == name) {
-        _meshes.back()->createData(data.name, dataDimensions, _dataIDManager.getFreeID(), data.waveformDegree);
+        _meshes.back()->createData(data.name, dataDimensions, _dataIDManager.getFreeID(), data.waveformDegree, lowerBound, upperBound);
         found = true;
         break;
       }

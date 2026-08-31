@@ -212,7 +212,7 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
 
   for (auto &attribute : _attributes) {
     std::visit(
-        [&aAttributes, this](auto &attribute) { attribute.readValue(aAttributes, _line, _column, _sourceLine); },
+        [this, &aAttributes](auto &attribute) { attribute.readValue(_fullName, aAttributes, _line, _column, _sourceLine); },
         attribute);
   }
 }
