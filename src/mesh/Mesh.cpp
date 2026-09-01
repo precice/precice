@@ -16,6 +16,7 @@
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
+#include "mesh/Filter.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
@@ -352,58 +353,14 @@ void Mesh::tagAll()
 }
 
 void Mesh::addMesh(
-    Mesh &deltaMesh)
+    const Mesh &deltaMesh)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_dimensions == deltaMesh.getDimensions());
 
-  boost::container::flat_map<VertexID, Vertex *> vertexMap;
-  vertexMap.reserve(deltaMesh.nVertices());
-  Eigen::VectorXd coords(_dimensions);
-  for (const Vertex &vertex : deltaMesh.vertices()) {
-    coords    = vertex.getCoords();
-    Vertex &v = createVertex(coords);
-    v.setGlobalIndex(vertex.getGlobalIndex());
-    if (vertex.isTagged())
-      v.tag();
-    v.setOwner(vertex.isOwner());
-    PRECICE_ASSERT(vertex.getID() >= 0, vertex.getID());
-    vertexMap[vertex.getID()] = &v;
-  }
+  // Filter by selecting all vertices in the delta mesh
+  filterMesh(*this, deltaMesh, [](const Vertex &) { return true; });
 
-  // you cannot just take the vertices from the edge and add them,
-  // since you need the vertices from the new mesh
-  // (which may differ in IDs)
-  for (const Edge &edge : deltaMesh.edges()) {
-    VertexID vertexIndex1 = edge.vertex(0).getID();
-    VertexID vertexIndex2 = edge.vertex(1).getID();
-    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
-                   (vertexMap.count(vertexIndex2) == 1));
-    createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-  }
-
-  for (const Triangle &triangle : deltaMesh.triangles()) {
-    VertexID vertexIndex1 = triangle.vertex(0).getID();
-    VertexID vertexIndex2 = triangle.vertex(1).getID();
-    VertexID vertexIndex3 = triangle.vertex(2).getID();
-    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
-                   (vertexMap.count(vertexIndex2) == 1) &&
-                   (vertexMap.count(vertexIndex3) == 1));
-    createTriangle(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3]);
-  }
-
-  for (const Tetrahedron &tetra : deltaMesh.tetrahedra()) {
-    VertexID vertexIndex1 = tetra.vertex(0).getID();
-    VertexID vertexIndex2 = tetra.vertex(1).getID();
-    VertexID vertexIndex3 = tetra.vertex(2).getID();
-    VertexID vertexIndex4 = tetra.vertex(3).getID();
-
-    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
-                   (vertexMap.count(vertexIndex2) == 1) &&
-                   (vertexMap.count(vertexIndex3) == 1) &&
-                   (vertexMap.count(vertexIndex4) == 1));
-    createTetrahedron(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3], *vertexMap[vertexIndex4]);
-  }
   _index.clear();
 }
 
