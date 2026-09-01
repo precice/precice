@@ -6,7 +6,6 @@
 
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
-#include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"
@@ -114,7 +113,7 @@ public:
   /**
    * @brief Attach a just-in-time mapping to this data context and setup a corresponding MappingDataCache
    *
-   * A just-in-time mapping ( \p justInTimeMapping ) might be shared across multiple data contexts (it's a PtrMapping).
+   * A just-in-time mapping ( \p justInTimeMapping ) might be shared across multiple data contexts.
    * The MappingDataCache ( \p mappingCache ), however, is unique for each data context.
    *
    * There is no need to put this function into a derived class:
@@ -216,7 +215,7 @@ protected:
   std::unique_ptr<mapping::impl::MappingDataCache> mappingCache;
 
   /// The just-in-time mapping for this data context
-  mapping::PtrMapping justInTimeMapping;
+  mapping::Mapping *justInTimeMapping = nullptr;
 
   /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
