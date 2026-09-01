@@ -1,8 +1,10 @@
 #pragma once
 
+#include <libxml/parser.h>
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
@@ -30,6 +32,10 @@ public:
     using AttributePair = std::map<std::string, std::string>;
     AttributePair                      m_aAttributes;
     std::vector<std::shared_ptr<CTag>> m_aSubTags;
+
+    /// 1-based line and column of the opening tag in the configuration file, or -1 if unknown.
+    int m_Line   = -1;
+    int m_Column = -1;
   };
 
   using CTagPtrVec = std::vector<std::shared_ptr<CTag>>;
@@ -44,6 +50,15 @@ private:
   CTagPtrVec m_CurrentTags;
 
   std::shared_ptr<precice::xml::XMLTag> m_pXmlTag;
+
+  /// Lines of the configuration file currently being parsed, used to add source context to error messages.
+  std::vector<std::string> m_lines;
+
+  /// The libxml2 parser context, only valid while readXmlFile() is parsing.
+  xmlParserCtxtPtr m_parserCtxt = nullptr;
+
+  /// Returns the source line (1-based), or an empty string if unknown/out-of-range.
+  std::string_view sourceLine(int line) const;
 
 public:
   /// Parser ctor for Callback init
@@ -72,7 +87,9 @@ public:
   void OnStartElement(
       std::string_view    localname,
       std::string_view    prefix,
-      CTag::AttributePair attributes);
+      CTag::AttributePair attributes,
+      int                 line,
+      int                 column);
 
   /// Callback for End-Tag
   void OnEndElement();
@@ -80,8 +97,11 @@ public:
   /// Callback for text sections in xml file
   void OnTextSection(const std::string &ch);
 
-  /// Proxy for error and warning messages from libxml2
-  static void MessageProxy(int level, std::string_view mess);
+  /// Returns the current line/column of the parser, or {-1, -1} if not currently parsing.
+  std::pair<int, int> currentParserPosition() const;
+
+  /// Reports an error or warning message from libxml2, annotated with the given source location.
+  void reportParserMessage(int level, std::string_view message, int line, int column) const;
 };
 } // namespace xml
 } // namespace precice
