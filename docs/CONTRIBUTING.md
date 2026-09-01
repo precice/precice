@@ -33,13 +33,13 @@ Please contact the maintainers before integrating non-trivial amount of code fro
 All contributions to this project are ultimately reviewed by humans, and we want to understand every contribution in detail.
 We welcome using any kind of tools that help contributors prepare and improve contributions, with the following requests:
 
-* Issues marked with `good-first-issue` are meant to be solved by humans, to get faimiliar with the code base. Similarly, `thesis` issues are meant for supervised students. Please do not assign these to an agent.
-* Describe the contribution yourself and do not use GenAI to generate your responses to our messages.
+* Issues marked with `good-first-issue` are meant to be solved by humans, to get familiar with the codebase. Similarly, `thesis` issues are meant for supervised students. Please do not assign these to an agent.
+* Describe the contribution yourself, and do not use GenAI to generate your responses to our messages.
   We believe that the writing process is a valuable form of self-review, and that human-written descriptions are more concise and useful than generated ones.
   Language edits and translations with GenAI tools are fine.
 * We want to see that you understand and trust your contribution, and we expect you to be able to defend it in review.
   Communicate clearly what you might not understand or have doubts about, so that we can focus our review on that.
-* Generated commit messages are tolerated. Agents must not appear as author or co-author of commits.
+* Generated commit messages are tolerated. Agents must not appear as authors or co-authors of commits.
 * In your PR description, specify what parts have been generated, and feel free to mention how.
 
 [newissue]: https://github.com/precice/precice/issues/new/choose
