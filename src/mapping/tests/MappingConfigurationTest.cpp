@@ -476,5 +476,37 @@ BOOST_AUTO_TEST_CASE(RBFPUMOpenMPConfiguration)
 #endif
 #endif
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(GaussianCutoffThresholdConfiguration)
+{
+  PRECICE_TEST();
+
+  std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
+  std::string file(pathToTests + "mapping-rbf-gaussian-cutoff-config.xml");
+  using xml::XMLTag;
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
+  mapping::MappingConfiguration mappingConfig(tag, meshConfig);
+  xml::configure(tag, xml::ConfigurationContext{}, file);
+
+  BOOST_TEST(meshConfig->meshes().size() == 5);
+  BOOST_TEST(mappingConfig.mappings().size() == 4);
+  for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
+    BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
+    BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
+    BOOST_TEST(mappingConfig.mappings().at(i).requiresBasisFunction == true);
+  }
+  {
+    // last configured RBF: Gaussian with shape-parameter and custom cutoff-threshold
+    bool solverSelection = mappingConfig.rbfConfig().solver == MappingConfiguration::RBFConfiguration::SystemSolver::GlobalDirect;
+    BOOST_TEST(solverSelection);
+    BOOST_TEST(mappingConfig.rbfConfig().cutoffThreshold == 1e-6);
+    BOOST_TEST(mappingConfig.rbfConfig().shapeParameter == 4.55);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
