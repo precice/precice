@@ -134,7 +134,8 @@ ConfigParser::ConfigParser(std::string_view filePath, const ConfigurationContext
     SubTags.push_back(m_AllTags[0]);
 
   try {
-    connectTags(context, DefTags, SubTags);
+    // parent xml context here is nil, constructed later on.
+    connectTags(context, DefTags, SubTags, "");
   } catch (::precice::Error &) {
     throw;
   } catch (const std::exception &e) {
@@ -246,7 +247,7 @@ auto gatherCandidates(const std::vector<std::shared_ptr<XMLTag>> &DefTags, std::
 }
 } // namespace
 
-void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<XMLTag>> &DefTags, CTagPtrVec &SubTags)
+void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<XMLTag>> &DefTags, CTagPtrVec &SubTags, const std::string &parentXMLCtx)
 {
   std::unordered_set<std::string> usedTags;
 
@@ -286,12 +287,31 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
       usedTags.emplace(pDefSubTag->_fullName);
     }
 
+    // generate the current tag context with existing attributes
+    // (we pass it to fullXMLCtx)
+    std::string tagCtx = fmt::format("<{}", expectedName);
+
+    for (const auto &[k, v] : subtag->m_aAttributes) {
+      tagCtx += fmt::format(" {}=\"{}\"", k, v);
+    }
+
+    tagCtx += ">";
+
+    // note that we construct and modify fullXMLCtx
+    // recursively.
+    std::string fullXMLCtx;
+
+    if (!parentXMLCtx.empty())
+      fullXMLCtx = fmt::format("{} inside {}", tagCtx, parentXMLCtx);
+    else
+      fullXMLCtx = tagCtx;
+
     pDefSubTag->_configuredNamespaces[pDefSubTag->_namespace] = true;
-    pDefSubTag->readAttributes(subtag->m_aAttributes);
+    pDefSubTag->readAttributes(subtag->m_aAttributes, fullXMLCtx);
     pDefSubTag->_listener.xmlTagCallback(context, *pDefSubTag);
     pDefSubTag->_configured = true;
 
-    connectTags(context, pDefSubTag->_subtags, subtag->m_aSubTags);
+    connectTags(context, pDefSubTag->_subtags, subtag->m_aSubTags, fullXMLCtx);
 
     pDefSubTag->areAllSubtagsConfigured();
     pDefSubTag->_listener.xmlEndTagCallback(context, *pDefSubTag);

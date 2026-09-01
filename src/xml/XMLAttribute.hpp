@@ -78,7 +78,7 @@ public:
     return _hasValidation;
   };
 
-  void readValue(std::string_view tagName, const std::map<std::string, std::string> &aAttributes);
+  void readValue(const std::map<std::string, std::string> &aAttributes, const std::string_view fullXMLCtx);
 
   const std::string &getName() const
   {
@@ -158,14 +158,14 @@ XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTR
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::map<std::string, std::string> &aAttributes)
+void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::string> &aAttributes, const std::string_view fullXMLCtx)
 {
   PRECICE_TRACE(_name);
   PRECICE_ASSERT(!_read, "Attribute \"" + _name + "\" has already been read.");
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
-    PRECICE_CHECK(_hasDefaultValue, "The tag <{}> in the configuration is missing required attribute \"{}\".", tagName, _name);
+    PRECICE_CHECK(_hasDefaultValue, "Missing required attribute \"{}\" in {}.", _name, fullXMLCtx);
     set(_value, _defaultValue);
   } else {
     try {
