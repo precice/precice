@@ -1203,6 +1203,10 @@ public:
 
   ///@}
 
+  double getSolverImbalance();
+
+  double getImbalanceFactor();
+
   /// Disable copy construction
   Participant(const Participant &copy) = delete;
 
