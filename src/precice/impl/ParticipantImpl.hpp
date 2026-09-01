@@ -350,6 +350,9 @@ private:
   /// The current State of the Participant
   State _state{State::Constructed};
 
+  /// Whether the Participant has entered an erroneous state due to an unrecoverable exception
+  bool _hasError{false};
+
   /// Counts calls to advance for plotting.
   long int _numberAdvanceCalls = 0;
 

@@ -7,6 +7,20 @@
  */
 
 //
+// ERROR STATE VALIDATION
+//
+
+/** Validates that the Participant is not in an erroneous state.
+ *
+ * Assumes the member _hasError exists.
+ */
+#define PRECICE_VALIDATE_ERROR_STATE()                                                     \
+  PRECICE_CHECK(!_hasError,                                                                \
+                "This function cannot be called after a previous unrecoverable error. "    \
+                "Participant \"{}\" is in an erroneous state and cannot be used further.", \
+                _accessorName)
+
+//
 // MESH VALIDATION
 //
 
