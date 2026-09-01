@@ -231,6 +231,24 @@ public:
    */
   bool hasConverged() const override;
 
+  /// @copydoc cplscheme::CouplingScheme::localParticipant()
+  std::string localParticipant() const final override;
+
+  /**
+   * @brief Adds CouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
+   *
+   * If CouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing CouplingData is returned.
+   *
+   * @param data data the CouplingData is associated with
+   * @param mesh mesh the CouplingData is associated with
+   * @param requiresInitialization true, if CouplingData requires initialization
+   * @param exchangeSubsteps true, if CouplingData exchanges all substeps in send/recv
+   * @param direction is the coupling data send or received?
+   *
+   * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
+   */
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps, CouplingData::Direction direction);
+
 protected:
   /// All send and receive data as a map "data ID -> data"
   DataMap _allData;
@@ -276,21 +294,6 @@ protected:
    * @param receiveData DataMap associated with received data
    */
   void initializeWithZeroInitialData(const DataMap &receiveData);
-
-  /**
-   * @brief Adds CouplingData with given properties to this BaseCouplingScheme and returns a pointer to the CouplingData
-   *
-   * If CouplingData with ID of provided data already exists in coupling scheme, no duplicate is created but a pointer to the already existing CouplingData is returned.
-   *
-   * @param data data the CouplingData is associated with
-   * @param mesh mesh the CouplingData is associated with
-   * @param requiresInitialization true, if CouplingData requires initialization
-   * @param exchangeSubsteps true, if CouplingData exchanges all substeps in send/recv
-   * @param direction is the coupling data send or received?
-   *
-   * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
-   */
-  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps, CouplingData::Direction direction);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -396,9 +399,6 @@ protected:
 
   /// @copydoc cplscheme::CouplingScheme::implicitDataToReceive()
   ImplicitData implicitDataToReceive() const override;
-
-  /// @copydoc cplscheme::CouplingScheme::localParticipant()
-  std::string localParticipant() const final override;
 
 protected:
   /**
