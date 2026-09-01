@@ -427,14 +427,16 @@ endif()
 
 
 # Setup Boost
-target_compile_definitions(preciceCore PUBLIC BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
+target_compile_definitions(preciceCore PUBLIC BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
+if(NOT Boost_USE_STATIC_LIBS)
+  target_compile_definitions(preciceCore PUBLIC BOOST_ALL_DYN_LINK)
+endif()
 target_link_libraries(preciceCore PUBLIC
   Boost::boost
   Boost::log
   Boost::log_setup
   Boost::program_options
   Boost::thread
-  Boost::unit_test_framework
   )
 if(UNIX OR APPLE OR MINGW)
   target_compile_definitions(preciceCore PUBLIC _GNU_SOURCE)
@@ -680,6 +682,7 @@ IF (BUILD_TESTING)
   target_link_libraries(testprecice
     PRIVATE
     preciceCore
+    Boost::unit_test_framework
     )
   set_target_properties(testprecice PROPERTIES
     CXX_STANDARD ${PRECICE_CXX_STANDARD}
