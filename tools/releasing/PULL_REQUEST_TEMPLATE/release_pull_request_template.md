@@ -115,8 +115,12 @@ Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://
 * [ ] Update `pyprecice` Spack
 * [ ] Update Website:
     * [ ] Bump version in [`_config.yml`](https://github.com/precice/precice.github.io/blob/master/_config.yml)
+       * [ ] In the same file: Also update the citation numbers
     * [ ] Update the [XML reference](https://github.com/precice/precice.github.io/blob/master/_includes/xmlreference.md) using `binprecice md`
-    * [ ] Look over the [Roadmap](https://www.precice.org/fundamentals-roadmap.html) and update entries.
+    * [ ] Look over the [Roadmap](https://www.precice.org/fundamentals-roadmap.html) and update entries
+    * [ ] Update the [dependencies page](https://github.com/precice/precice.github.io/blob/master/content/docs/installation/building-from-source/installation-source-dependencies.md) (supported versions)
+    * [ ] Update the supported [Ubuntu versions](https://github.com/precice/precice.github.io/blob/master/content/docs/installation/installation-packages.md) corresponding to the baseline
+* [ ] Update the versions in the [Quickstart tutorial](https://github.com/precice/tutorials/edit/develop/quickstart/README.md)
 
 ### Release new version for bindings (to ensure compatibility with newest preCICE version)
 
