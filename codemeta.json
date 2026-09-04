@@ -1,0 +1,24 @@
+{
+    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "type": "SoftwareSourceCode",
+    "codeRepository": "https://github.com/precice/precice",
+    "dateModified": "2024-06-24",
+    "description": "A coupling library for partitioned multi-physics simulations.",
+    "downloadUrl": "https://github.com/precice/precice/archive/refs/tags/v3.1.2.tar.gz",
+    "isPartOf": "https://precice.org/",
+    "license": "https://spdx.org/licenses/LGPL-3.0-or-later",
+    "name": "preCICE",
+    "operatingSystem": [
+        "Linux",
+        "macOS"
+    ],
+    "programmingLanguage": "C++",
+    "softwareRequirements": "https://precice.org/installation-source-dependencies.html",
+    "version": "3.1.2",
+    "contIntegration": "https://github.com/precice/precice/actions",
+    "codemeta:continuousIntegration": {
+        "id": "https://github.com/precice/precice/actions"
+    },
+    "issueTracker": "https://github.com/precice/precice/issues",
+    "referencePublication": "https://doi.org/10.12688/openreseurope.14445.2"
+}
