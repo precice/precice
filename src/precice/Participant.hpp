@@ -540,6 +540,7 @@ public:
    *
    * @pre initialize() has been called
    * @pre isCouplingOngoing() is true
+   * @pre No advance() has been called yet, or the current time window is complete
    *
    * @post previously returned vertex ids from setMeshVertex() and setMeshVertices() of the given mesh are invalid.
    */
