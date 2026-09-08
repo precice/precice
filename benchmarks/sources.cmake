@@ -7,6 +7,7 @@ target_sources(precice-bench
     benchmarks/bb.cpp
     benchmarks/helper.hpp
     benchmarks/main.cpp
+    benchmarks/mapping-nn.cpp
     benchmarks/mesh-index.cpp
     benchmarks/mesh-tagging.cpp
     benchmarks/rbf-assembly-kernels.cpp

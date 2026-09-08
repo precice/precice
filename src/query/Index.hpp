@@ -68,8 +68,14 @@ public:
   Index(mesh::Mesh &mesh);
   ~Index();
 
+  /// Get the closest vertex to the given coordinates
+  VertexMatch getClosestVertex(const mesh::Vertex::RawCoords &sourceCoord);
+
   /// Get the closest vertex to the given vertex
   VertexMatch getClosestVertex(const Eigen::VectorXd &sourceCoord);
+
+  /// Get n number of closest vertices to the given coordinates
+  std::vector<VertexID> getClosestVertices(const mesh::Vertex::RawCoords &sourceCoord, int n);
 
   /// Get n number of closest vertices to the given vertex
   std::vector<VertexID> getClosestVertices(const Eigen::VectorXd &sourceCoord, int n);
