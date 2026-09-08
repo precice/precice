@@ -168,30 +168,40 @@ Index::Index(mesh::Mesh &mesh)
 // Required for the pimpl idiom to work with std::unique_ptr
 Index::~Index() = default;
 
-VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
+VertexMatch Index::getClosestVertex(const mesh::Vertex::RawCoords &sourceCoord)
 {
   PRECICE_TRACE();
 
   PRECICE_ASSERT(not _mesh->empty(), _mesh->getName());
   VertexMatch match;
   const auto &rtree = _pimpl->getVertexRTree(*_mesh);
-  rtree->query(bgi::nearest(eigenToRaw(sourceCoord), 1), boost::make_function_output_iterator([&](size_t matchID) {
+  rtree->query(bgi::nearest(sourceCoord, 1), boost::make_function_output_iterator([&](size_t matchID) {
                  match = VertexMatch(matchID);
                }));
   return match;
 }
 
-std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoord, int n)
+VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
+{
+  return getClosestVertex(eigenToRaw(sourceCoord));
+}
+
+std::vector<VertexID> Index::getClosestVertices(const mesh::Vertex::RawCoords &sourceCoord, int n)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(!(_mesh->empty()), _mesh->getName());
   std::vector<VertexID> matches;
   const auto           &rtree = _pimpl->getVertexRTree(*_mesh);
 
-  rtree->query(bgi::nearest(eigenToRaw(sourceCoord), n), boost::make_function_output_iterator([&](size_t matchID) {
+  rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
                  matches.emplace_back(matchID);
                }));
   return matches;
+}
+
+std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoord, int n)
+{
+  return getClosestVertices(eigenToRaw(sourceCoord), n);
 }
 
 std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord, int n)
