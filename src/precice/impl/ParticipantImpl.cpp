@@ -24,7 +24,6 @@
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "io/Export.hpp"
 #include "io/ExportContext.hpp"
-#include "io/SharedPointer.hpp"
 #include "logging/LogConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/BoundM2N.hpp"

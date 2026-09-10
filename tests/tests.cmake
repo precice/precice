@@ -3,6 +3,11 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/exporter/filter/All.cpp
+    tests/exporter/filter/Provided.cpp
+    tests/exporter/filter/Received.cpp
+    tests/exporter/filter/helpers.cpp
+    tests/exporter/filter/helpers.hpp
     tests/exporter/timeseries/ExportTimeseries.cpp
     tests/exporter/timeseries/FinalTimeseries.cpp
     tests/exporter/timeseries/UpdatedTimeseries.cpp
