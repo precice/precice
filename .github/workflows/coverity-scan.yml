@@ -22,7 +22,7 @@ jobs:
           TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
 
       - name: Checkout preCICE
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: 'precice'
 
@@ -49,3 +49,11 @@ jobs:
         env:
           TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
           EMAIL: ${{ secrets.COVERITY_SUBMITTER_EMAIL }}
+      - name: Notification
+        if: always()
+        uses: precice/notify-action@v1
+        with:
+          homeserver: ${{ vars.MATRIX_BOT_HOMESERVER }}
+          login: ${{ vars.MATRIX_BOT_LOGIN }}
+          password: ${{ secrets.MATRIX_BOT_PASSWORD }}
+          room_id: ${{ vars.MATRIX_BOT_ROOMID }}
