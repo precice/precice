@@ -1,4 +1,4 @@
-name: System tests
+name: System tests (all)
 
 on:
   pull_request:
@@ -6,9 +6,9 @@ on:
 
 jobs:
   run-system-tests:
-    name: Trigger system tests
+    name: Trigger system tests (all)
     if: ${{ github.event.label.name == 'trigger-system-tests' }}
     uses: precice/tutorials/.github/workflows/system-tests.yml@develop
     with:
-      suites: precice
+      suites: release
       build_args: PRECICE_PR:${{ github.event.number }},PRECICE_REF:${{ github.event.pull_request.head.sha }}
