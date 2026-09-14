@@ -185,17 +185,16 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
 {
   PRECICE_TRACE();
 
-  // Check for unexpected attributes and hints
   for (const auto &element : aAttributes) {
     const auto &name = element.first;
     if (hasAttribute(name)) {
       continue;
     }
 
-    // check existing hints
     if (auto pos = _attributeHints.find(name);
         pos != _attributeHints.end()) {
-      PRECICE_ERROR("The tag <{}> in the configuration contains the attribute \"{}\". {}", _fullName, name, pos->second);
+      PRECICE_ERROR(formatMessage(
+          fmt::format("The tag <{}> in the configuration contains the attribute \"{}\". {}", _fullName, name, pos->second)));
     }
 
     auto expected = getAttributeNames();
@@ -204,15 +203,16 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
       matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
       std::vector<std::string> stringMatches;
       std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
-      PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Did you mean \"{}\"?", _fullName, name, fmt::join(stringMatches, ", "));
+      PRECICE_ERROR(formatMessage(
+          fmt::format("The tag <{}> in the configuration contains an unknown attribute \"{}\". Did you mean \"{}\"?", _fullName, name, fmt::join(stringMatches, ", "))));
     }
-    PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, name, fmt::join(expected, ", "));
+    PRECICE_ERROR(formatMessage(
+        fmt::format("The tag <{}> in the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, name, fmt::join(expected, ", "))));
   }
 
-  // Read all attributes
   for (auto &attribute : _attributes) {
     std::visit(
-        [this, &aAttributes](auto &attribute) { attribute.readValue(_fullName, aAttributes); },
+        [this, &aAttributes](auto &attribute) { attribute.readValue(_fullName, aAttributes, _line, _column, _sourceLine); },
         attribute);
   }
 }
@@ -312,4 +312,32 @@ std::string_view XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)
   }
   return "";
 }
+
+void XMLTag::setLocation(int line, int column, std::string sourceLine)
+{
+  _line       = line;
+  _column     = column;
+  _sourceLine = std::move(sourceLine);
+}
+
+int XMLTag::getLine() const
+{
+  return _line;
+}
+
+int XMLTag::getColumn() const
+{
+  return _column;
+}
+
+bool XMLTag::hasLocation() const
+{
+  return _line > 0;
+}
+
+std::string XMLTag::formatMessage(std::string_view message) const
+{
+  return utils::appendLocation(message, _line, _column, _sourceLine);
+}
+
 } // namespace precice::xml

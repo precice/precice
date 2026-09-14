@@ -8,6 +8,7 @@
 #include "xml/ValueParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
+#include "precice/Exceptions.hpp"
 
 using namespace precice;
 using namespace precice::xml;
@@ -226,6 +227,82 @@ BOOST_AUTO_TEST_CASE(Decode)
   BOOST_TEST(decodeXML("Apostrophe &apos; test") == "Apostrophe ' test");
 
   BOOST_TEST(decodeXML("&quot; &lt; &gt; &gt; &lt; &amp; &quot; &amp; &apos;") == "\" < > > < & \" & '");
+}
+
+struct LocationListener : public XMLTag::Listener {
+  int fooLine = -1;
+  int fooColumn = -1;
+  void xmlTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override
+  {
+    if (callingTag.getName() == "foo") {
+      fooLine = callingTag.getLine();
+      fooColumn = callingTag.getColumn();
+    }
+  }
+  void xmlEndTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override {}
+};
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(LocationInformation)
+{
+  PRECICE_TEST();
+  std::string filename(getPathToSources() + "/xml/tests/xmlparser_location.xml");
+
+  LocationListener listener;
+  XMLTag rootTag(listener, "configuration", XMLTag::OCCUR_ONCE);
+  XMLTag fooTag(listener, "foo", XMLTag::OCCUR_ONCE);
+  XMLAttribute<std::string> attr("attr");
+  fooTag.addAttribute(attr);
+  rootTag.addSubtag(fooTag);
+
+  configure(rootTag, ConfigurationContext{}, filename);
+
+  BOOST_TEST(listener.fooLine == 3);
+  // libxml2 reports the column where parsing of the start tag finished (i.e. after its
+  // attributes), not the column of the opening '<'.
+  BOOST_TEST(listener.fooColumn == 19);
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(LocationErrorMessage)
+{
+  PRECICE_TEST();
+  std::string filename(getPathToSources() + "/xml/tests/xmlparser_missing_attr.xml");
+
+  LocationListener listener;
+  XMLTag rootTag(listener, "configuration", XMLTag::OCCUR_ONCE);
+  XMLTag fooTag(listener, "foo", XMLTag::OCCUR_ONCE);
+  XMLAttribute<std::string> attr("attr");
+  fooTag.addAttribute(attr);
+  rootTag.addSubtag(fooTag);
+
+  try {
+    configure(rootTag, ConfigurationContext{}, filename);
+    BOOST_FAIL("configuration should have thrown");
+  } catch (const Error &e) {
+    std::string msg = e.what();
+    BOOST_TEST(msg.find("line 3") != std::string::npos);
+  }
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(MalformedXmlErrorMessage)
+{
+  PRECICE_TEST();
+  std::string filename(getPathToSources() + "/xml/tests/xmlparser_malformed.xml");
+
+  // The file contains a duplicated attribute, which libxml2 itself rejects
+  // while parsing, before the tags are ever connected to the definitions below.
+  XMLTag root = getRootTag();
+
+  try {
+    configure(root, ConfigurationContext{}, filename);
+    BOOST_FAIL("configuration should have thrown");
+  } catch (const Error &e) {
+    std::string msg = e.what();
+    BOOST_TEST(msg.find("line 3") != std::string::npos);
+    BOOST_TEST(msg.find("attr=\"bar\" attr=\"baz\"") != std::string::npos);
+  }
 }
 
 PRECICE_TEST_SETUP(1_rank)
