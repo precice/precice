@@ -19,6 +19,7 @@
 #include "precice/Participant.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "precice/impl/SolverImbalance.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "utils/MultiLock.hpp"
@@ -305,6 +306,10 @@ public:
   /// Disable move assignment
   ParticipantImpl &operator=(ParticipantImpl &&) = delete;
 
+  double getSolverImbalance();
+
+  double getImbalanceFactor();
+
 private:
   mutable logging::Logger _log{"impl::ParticipantImpl"};
 
@@ -330,6 +335,8 @@ private:
   std::vector<impl::PtrParticipant> _participants;
 
   cplscheme::PtrCouplingScheme _couplingScheme;
+
+  std::shared_ptr<SolverImbalance> _solverImbalance;
 
   /// Represents the various states a Participant can be in.
   enum struct State {
