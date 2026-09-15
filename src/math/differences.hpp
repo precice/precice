@@ -22,6 +22,11 @@ typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type equals(co
   return std::abs(a - b) <= tolerance;
 }
 
+inline bool isZero(double a, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
+{
+  return std::abs(a) < tolerance;
+}
+
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type greater(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {

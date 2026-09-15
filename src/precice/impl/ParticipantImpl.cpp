@@ -411,7 +411,7 @@ void ParticipantImpl::advance(
 
   // validating computed time step
   PRECICE_CHECK(std::isfinite(computedTimeStepSize), "advance() cannot be called with an infinite time step size.");
-  PRECICE_CHECK(!math::equals(computedTimeStepSize, 0.0), "advance() cannot be called with a time step size of 0.");
+  PRECICE_CHECK(!math::isZero(computedTimeStepSize), "advance() cannot be called with a time step size of 0.");
   PRECICE_CHECK(computedTimeStepSize > 0.0, "advance() cannot be called with a negative time step size {}.", computedTimeStepSize);
 
   _numberAdvanceCalls++;
@@ -671,7 +671,7 @@ double ParticipantImpl::getMaxTimeStepSize() const
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   const double nextTimeStepSize = _couplingScheme->getNextTimeStepMaxSize();
-  // PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
+  // PRECICE_ASSERT(!math::isZero(nextTimeStepSize), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
   // PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
 
   // safeguard needed because _couplingScheme->getNextTimeStepMaxSize() returns 0, if not isCouplingOngoing()
@@ -1214,7 +1214,7 @@ void ParticipantImpl::readData(
   PRECICE_CHECK(_state != State::Finalized, "readData(...) cannot be called after finalize().");
   PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readData(...) cannot sample data before the current time.");
-  PRECICE_CHECK(isCouplingOngoing() || math::equals(relativeReadTime, 0.0), "Calling readData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
+  PRECICE_CHECK(isCouplingOngoing() || math::isZero(relativeReadTime), "Calling readData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
 
@@ -1266,7 +1266,7 @@ void ParticipantImpl::mapAndReadData(
   PRECICE_CHECK(_state != State::Finalized, "mapAndReadData(...) cannot be called after finalize().");
   PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "mapAndReadData(...) cannot sample data before the current time.");
-  PRECICE_CHECK(isCouplingOngoing() || math::equals(relativeReadTime, 0.0), "Calling mapAndReadData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
+  PRECICE_CHECK(isCouplingOngoing() || math::isZero(relativeReadTime), "Calling mapAndReadData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
   PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());

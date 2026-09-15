@@ -43,6 +43,12 @@ BOOST_AUTO_TEST_CASE(Scalar)
   BOOST_CHECK(equals(a, a + eps, eps));
   BOOST_CHECK(not equals(a, a + 10.0 * eps, eps));
   BOOST_CHECK(equals(a, a + 10.0 * eps, 10.0 * eps));
+
+  BOOST_CHECK(isZero(0.0));
+  BOOST_CHECK(!isZero(eps * 2));
+  BOOST_CHECK(!isZero(eps * 2, eps));
+  BOOST_CHECK(isZero(eps / 2, eps));
+  BOOST_CHECK(!isZero(1.0));
 }
 
 PRECICE_TEST_SETUP(1_rank)

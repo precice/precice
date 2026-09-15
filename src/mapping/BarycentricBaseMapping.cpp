@@ -148,7 +148,7 @@ void BarycentricBaseMapping::tagMeshFirstRound()
   // Gather all vertices to be tagged in a first phase.
   std::vector<bool> tagged(origins->nVertices(), false);
   for (const auto &op : _operations) {
-    PRECICE_ASSERT(!math::equals(op.weight, 0.0));
+    PRECICE_ASSERT(!math::isZero(op.weight));
     tagged[op.in] = true;
   }
 
@@ -169,7 +169,7 @@ void BarycentricBaseMapping::tagMeshFirstRound()
 void BarycentricBaseMapping::addPolation(VertexID out, const Polation &p)
 {
   for (const auto &we : p.getWeightedElements()) {
-    if (!precice::math::equals(we.weight, 0.0)) {
+    if (!precice::math::isZero(we.weight)) {
       _operations.push_back({out, we.vertexID, we.weight});
     }
   }
