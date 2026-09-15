@@ -25,7 +25,7 @@ bool compatibleTimeWindowSizes(const CouplingScheme &impl, const CouplingScheme 
   double idt = impl.getTimeWindowSize();
   double edt = expl.getTimeWindowSize();
   // edt needs to be an integer multiple of idt
-  return math::equals(edt, idt) || math::equals(std::remainder(edt, idt), 0.0);
+  return math::equals(edt, idt) || math::isZero(std::remainder(edt, idt));
 }
 } // namespace
 

@@ -27,7 +27,7 @@ bool lineIntersection(
              c(0) * (a(1) - b(1));
 
   // If D==0, the two lines are parallel
-  if (math::equals(D, 0.0)) {
+  if (math::isZero(D)) {
     return false;
   }
 
@@ -64,8 +64,8 @@ ResultConstants segmentPlaneIntersection(
   Eigen::Vector3d segmentVec(secondPointSegment - firstPointSegment);
   double          nominator   = d - firstPointSegment.dot(planeNormal);
   double          denominator = segmentVec.dot(planeNormal);
-  if (math::equals(denominator, 0.0)) {
-    if (math::equals(nominator, 0.0)) {
+  if (math::isZero(denominator)) {
+    if (math::isZero(nominator)) {
       return CONTAINED;
     } else {
       return NO_INTERSECTION;
@@ -83,7 +83,7 @@ ResultConstants segmentPlaneIntersection(
 
   // If t equals 1 or 0, the segment is just touching the plane, otherwise, a
   // real intersection is happening.
-  if (math::equals(t, 0.0) || math::equals(t, 1.0)) {
+  if (math::isZero(t) || math::equals(t, 1.0)) {
     return TOUCHING;
   }
 
@@ -161,7 +161,7 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
     Eigen::Vector3d e_2          = coords[2] - coordOrigin;
     Eigen::Vector3d normalVector = e_1.cross(e_2);
 
-    PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0),
+    PRECICE_CHECK(math::isZero(normalVector.dot(coords[3] - coordOrigin)),
                   "Non-planar quads are not supported. The vertex coordinates are: {}.", coords);
 
     // Transform Coordinates - coord[0] is the origin

@@ -29,6 +29,12 @@ typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type equals(co
 }
 
 template <class Scalar>
+typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type isZero(const Scalar a, const Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+{
+  return std::abs(a) < tolerance;
+}
+
+template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type greater(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
   return A > B + tolerance;
