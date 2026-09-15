@@ -93,7 +93,7 @@ void TimeHandler::completeTimeWindow(double timeWindowSize)
 
 bool TimeHandler::reachedEndOfWindow(double timeWindowSize) const
 {
-  return math::equals(untilWindowEnd(timeWindowSize), 0.0);
+  return math::isZero(untilWindowEnd(timeWindowSize));
 }
 
 bool TimeHandler::reachedEnd() const
@@ -101,7 +101,7 @@ bool TimeHandler::reachedEnd() const
   if (!_impl->_maxTime) {
     return false; // Directly return preventing lossy computations
   }
-  return math::equals(untilTime(*_impl->_maxTime), 0.0);
+  return math::isZero(untilTime(*_impl->_maxTime));
 }
 
 // Time differences
