@@ -19,31 +19,37 @@ constexpr bool equals(const Eigen::MatrixBase<DerivedA> &A,
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type equals(const Scalar a, const Scalar b, const Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return std::abs(a - b) <= tolerance;
+  auto d = std::abs(a - b);
+  // Handle differences close to 0
+  if (d < tolerance) {
+    return true;
+  }
+  // Handles larger difference
+  return (d <= tolerance * std::max(std::abs(a), std::abs(b)));
 }
 
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type greater(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return A - B > tolerance;
+  return A > B + tolerance;
 }
 
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type greaterEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return A - B >= -tolerance;
+  return A + tolerance >= B;
 }
 
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type smaller(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return A - B < -tolerance;
+  return A + tolerance < B;
 }
 
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type smallerEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return A - B <= tolerance;
+  return A <= B + tolerance;
 }
 
 } // namespace precice::math
