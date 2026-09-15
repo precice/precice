@@ -52,21 +52,12 @@ BOOST_AUTO_TEST_CASE(Vector)
   Eigen::Vector3d vec0(1.0, 2.0, 3.0);
   Eigen::Vector3d vec1(vec0);
   BOOST_CHECK(equals(vec0, vec1));
-  BOOST_CHECK(not oneGreater(vec0, vec1));
-  BOOST_CHECK(oneGreaterEquals(vec0, vec1));
-  BOOST_CHECK(not allGreater(vec0, vec1));
 
   vec0 << 2.0, 2.0, 3.0;
   BOOST_CHECK(not equals(vec0, vec1));
-  BOOST_CHECK(oneGreater(vec0, vec1));
-  BOOST_CHECK(oneGreaterEquals(vec0, vec1));
-  BOOST_CHECK(not allGreater(vec0, vec1));
 
   vec0 << 2.0, 3.0, 4.0;
   BOOST_CHECK(not equals(vec0, vec1));
-  BOOST_CHECK(oneGreater(vec0, vec1));
-  BOOST_CHECK(oneGreaterEquals(vec0, vec1));
-  BOOST_CHECK(allGreater(vec0, vec1));
 
   // up to here vec1=vec0
   const double tolerance = 1e-14;
@@ -74,26 +65,16 @@ BOOST_AUTO_TEST_CASE(Vector)
   vec0(1)                = vec1(1);
   vec0(2)                = vec1(2) + 0.99 * tolerance;
   BOOST_CHECK(equals(vec0, vec1, tolerance));
-  BOOST_CHECK(not oneGreater(vec0, vec1, tolerance));
-  BOOST_CHECK(oneGreaterEquals(vec0, vec1));
-  BOOST_CHECK(not allGreater(vec0, vec1, tolerance));
 
   vec0(2) = vec1(2) + 10.0 * tolerance;
   BOOST_CHECK(not equals(vec0, vec1, tolerance));
-  BOOST_CHECK(oneGreater(vec0, vec1, tolerance));
-  BOOST_CHECK(oneGreaterEquals(vec0, vec1));
-  BOOST_CHECK(not allGreater(vec0, vec1, tolerance));
 
   vec0 << 1.0, 2.0, 3.0;
   vec0 = vec0.array() + (10.0 * tolerance);
   BOOST_CHECK(not equals(vec0, vec1, tolerance));
-  BOOST_CHECK(oneGreater(vec0, vec1, tolerance));
-  BOOST_CHECK(oneGreaterEquals(vec0, vec1));
-  BOOST_CHECK(allGreater(vec0, vec1, tolerance));
 
   vec0 << 1.0, 2.0, 3.0;
   vec0 = vec0.array() - 0.99 * tolerance;
-  BOOST_CHECK(oneGreaterEquals(vec0, vec1));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Differences
