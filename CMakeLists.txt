@@ -219,7 +219,10 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
-option(Boost_USE_STATIC_LIBS "Force BoostConfig.cmake to find static libraries." OFF)
+option(Boost_USE_STATIC_LIBS "Use static Boost libraries." OFF)
+if(Boost_USE_STATIC_LIBS)
+  message(FATAL_ERROR "Boost_USE_STATIC_LIBS must be OFF because preCICE requires shared Boost.Log libraries.")
+endif()
 set(_precice_boost_components log log_setup program_options thread)
 if(BUILD_TESTING)
   list(APPEND _precice_boost_components unit_test_framework)
@@ -430,10 +433,7 @@ endif()
 
 
 # Setup Boost
-target_compile_definitions(preciceCore PUBLIC BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
-if(NOT Boost_USE_STATIC_LIBS)
-  target_compile_definitions(preciceCore PUBLIC BOOST_ALL_DYN_LINK)
-endif()
+target_compile_definitions(preciceCore PUBLIC BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
 target_link_libraries(preciceCore PUBLIC
   Boost::boost
   Boost::log
