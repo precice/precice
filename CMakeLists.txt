@@ -219,10 +219,16 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
-option(Boost_USE_STATIC_LIBS "Force BoostConfig.cmake to find static libraries." OFF)
-find_package(Boost 1.83.0 REQUIRED CONFIG
-  COMPONENTS log log_setup program_options thread unit_test_framework
-  )
+option(Boost_USE_STATIC_LIBS "Use static Boost libraries." OFF)
+if(Boost_USE_STATIC_LIBS)
+  message(FATAL_ERROR "Boost_USE_STATIC_LIBS must be OFF because preCICE requires shared Boost.Log libraries.")
+endif()
+set(_precice_boost_components log log_setup program_options thread)
+if(BUILD_TESTING)
+  list(APPEND _precice_boost_components unit_test_framework)
+endif()
+find_package(Boost 1.83.0 REQUIRED CONFIG COMPONENTS ${_precice_boost_components})
+unset(_precice_boost_components)
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_DEBUG Boost_LOG_SETUP_LIBRARY_DEBUG Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG Boost_SYSTEM_LIBRARY_DEBUG Boost_THREAD_LIBRARY_DEBUG Boost_UNIT_TEST_FRAMEWORK_LIBRARY_DEBUG)
 message(STATUS "Found Boost ${Boost_VERSION}")
@@ -434,7 +440,6 @@ target_link_libraries(preciceCore PUBLIC
   Boost::log_setup
   Boost::program_options
   Boost::thread
-  Boost::unit_test_framework
   )
 if(UNIX OR APPLE OR MINGW)
   target_compile_definitions(preciceCore PUBLIC _GNU_SOURCE)
@@ -680,6 +685,7 @@ IF (BUILD_TESTING)
   target_link_libraries(testprecice
     PRIVATE
     preciceCore
+    Boost::unit_test_framework
     )
   set_target_properties(testprecice PROPERTIES
     CXX_STANDARD ${PRECICE_CXX_STANDARD}
