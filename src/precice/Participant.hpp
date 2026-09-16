@@ -240,12 +240,25 @@ public:
    */
 
   /**
-   * @brief Fully initializes preCICE and coupling data.
-   *
-   * - Sets up a connection to the other participants of the coupled simulation.
-   * - Pre-processes defined meshes and handles partitions in parallel.
-   * - Receives first coupling data. The starting values for coupling data are zero by default.
-   * - Determines maximum allowed size of the first time step to be computed.
+   * @details The initialize() function initializes the participant. It shall set up communication to
+   * the other participants of the coupled simulation. 
+   * 
+   * If the participant receives a mesh from other participants it shall block until the mesh
+   * vertices have been received. The participant shall also send its mesh to any other participants
+   * that require it in the coupled simulation.
+   * 
+   * The function shall create a mapping between the vertices of its local mesh to the nearest
+   * vertices of all the meshes that it received.  
+   * 
+   * If no initial coupling data is provided, then the values shall default to zero. It shall map
+   * any initial data from its local mesh to its received mesh. The function shall initialize its 
+   * coupling scheme and communicate the initial coupling data to other participants. The initial 
+   * data received from other participants during coupling scheme initialization shall be mapped to 
+   * its local mesh.
+   * 
+   * If the execution order is serial, this function shall block for data from other participants 
+   * if the participant does not execute first. If the execution order is parallel, then the 
+   * function shall not block.
    *
    * @pre initialize() has not yet been called.
    *
@@ -259,27 +272,29 @@ public:
   void initialize();
 
   /**
-   * @brief Advances preCICE after the solver has computed one time step.
-   *
-   * There are two cases to distinguish at this point.
-   * If \p computedTimeStepSize == \ref getMaxTimeStepSize(), then the solver has reached
-   * the end of a time window and proceeds the coupling.
-   * This call is a computationally expensive process as it involves among other tasks:
-   *
-   * - Sending and resetting coupling data written by solver to coupling partners.
-   * - Receiving coupling data read by solver.
-   * - Computing and applying data mappings.
-   * - Computing convergence measures in implicit coupling schemes.
-   * - Computing acceleration of coupling data.
-   * - Exchanging and computing information regarding the state of the coupled simulation.
-   *
-   * If \p computedTimeStepSize < \ref getMaxTimeStepSize(), then the solver hasn't reached the end of a time window and it is subcycling.
-   * Depending on the configuration, written data can be used by preCICE to generate additional samples allowing for time interpolation using \ref readData().
-   * This call is computationally inexpensive.
-   *
-   * @param[in] computedTimeStepSize Size of time step used by the solver.
-   *
-   * @attention All ranks of participants running in parallel \b must pass the same \p computedTimeStep to advance().
+   * @param[in] computedTimeStepSize Specifies the size of the time step used by the participant.
+   * 
+   * @details The advance() function shall advance the coupling to the start of the next time window.
+   * It shall map the data from its local mesh to its received mesh, send this data, receive 
+   * data from other participant, and map this received data from its received mesh to its 
+   * local mesh.
+   * 
+   * The advance() function shall behave differently based on the value of its input parameter.
+   * If computedTimeStepSize is equal to the getMaxTimeStepSize() of this time window, then the
+   * function shall perform the data exchange as described above, and advance time to the start
+   * of the next time window. If computedTimeStepSize is less than getMaxTimeStepSize(), 
+   * the function must return without any data exchange.
+   * 
+   * The coupling scheme shall be configured by execution order and iteration mode. Execution
+   * order may be serial or parallel. If serial, advance() shall block until the remote participant
+   * has completed its execution and sent its data. If parallel, advance() shall not block, and
+   * both participants shall execute simultaneously.
+   * 
+   * The iteration mode may be implicit or explicit. If explicit, then the advance() function
+   * behaves as described above. If implicit, then the participant shall iterate in each time
+   * window until convergence is achieved. The implementation shall check convergence of data
+   * against specified tolerance limits. Implicit schemes may apply acceleration schemes to
+   * the data to achieve faster convergence within a time window.
    *
    * @see getMaxTimeStepSize to get the maximum allowed value for \p computedTimeStepSize.
    *
@@ -415,10 +430,12 @@ public:
    */
 
   /**
-   * @brief Returns the spatial dimensionality of the given mesh.
    *
    * @param[in] meshName the name of the associated mesh
    *
+   * @details The getMeshDimensions() function must get the dimensions of the mesh identified by the
+   * parameter meshName. If a mesh with name meshName is not found an error must be thrown. 
+   * 
    * @returns the dimensions of the given mesh
    */
   int getMeshDimensions(::precice::string_view meshName) const;
