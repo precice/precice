@@ -1,0 +1,6 @@
+T> ERR ctor-badrank: The solver process index, currently: 2  needs to be smaller than the solver process size, currently: 1. Please check the values given when constructing a preCICE interface.
+T> ERR ctor-badsize: The solver process size needs to be a positive number, not: 0. Please check the value given when constructing a preCICE interface.
+T> ERR ctor-negrank: The solver process index needs to be a non-negative number, not: -1. Please check the value given when constructing a preCICE interface.
+T> ERR ctor-nullcomm: Passing "nullptr" as "communicator" to Participant constructor is not allowed. Please use the Participant constructor without the "communicator" argument, if you don't want to pass an MPI communicator.
+T> ERR ctor-emptyname: This participant's name is an empty string. When constructing a preCICE interface you need to pass the name of the participant as first argument to the constructor.
+T> ERR ctor-unknown-participant: Participant 'NoSuchSolver' not found in configuration '<CONFIG>'
