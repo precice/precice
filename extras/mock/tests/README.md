@@ -1,9 +1,6 @@
 # Mock tests
 
-Test infrastructure for the mocked preCICE library (`extras/mock`), in two
-layers:
-
-## `api/` — driver-based API tests
+Test infrastructure for the mocked preCICE library (`extras/mock`).
 
 A synthetic driver ([api/driver.cpp](api/driver.cpp)) exercises the Participant
 API scenario by scenario and logs observable behavior as `T> ` lines.
@@ -34,35 +31,11 @@ API scenario by scenario and logs observable behavior as `T> ` lines.
    (re)validate the golden files whenever the mock is meant to track a change
    in real preCICE behavior.
 
-## `tutorials/` — tutorial and course integration tests
+## Integration tests against real adapters
 
-Runs real adapters (OpenFOAM, python bindings, FMI, nutils, ...) against the
-mock.
-
-- **Smoke test** — [tutorials/smoke.sh](tutorials/smoke.sh) runs a curated set
-  of short tutorials plus the four course solution sets and compares the
-  normalized output against the committed baselines in `tutorials/baselines/`
-  (statuses *and* solver output; timestamps, paths, PIDs etc. are filtered).
-  Course tasks that fail on purpose (course content) are simply part of the
-  baseline. Runtime: ~4.5 minutes; courses run as parallel background jobs.
-
-  ```bash
-  tutorials/smoke.sh [--tutorials-only|--courses-only]
-  ```
-
-- **Baseline update** — [tutorials/smoke_update.sh](tutorials/smoke_update.sh)
-  regenerates the baselines. It first validates every tutorial group as a real
-  coupled pair (and the courses with concurrent participants) against the real
-  `libprecice`, recording the outcomes in `tutorials/baselines/real-status.txt`,
-  then rewrites the mock baselines. Run it whenever preCICE, the tutorials, or
-  the course material changes intentionally; use `--skip-real` when only
-  normalization changed.
-
-- **Full sweeps (manual)** —
-  [tutorials/run_all_tutorials.sh](tutorials/run_all_tutorials.sh) runs *all*
-  tutorials against the mock (`--skip-missing`, `--skip-long`, `--timeout N`),
-  and [tutorials/run_course_solutions.sh](tutorials/run_course_solutions.sh)
-  runs the course solutions with either the mock (`--mock`, sequential) or real
-  preCICE (concurrent). [tutorials/gen_mock_configs.py](tutorials/gen_mock_configs.py)
-  generates the per-tutorial `precice-mock-config.xml` files (bounded-random
-  read data with hand-tuned overrides for physics-sensitive cases).
+The mock has also been run against the preCICE tutorials and the course
+material (OpenFOAM, the Python bindings, FMI, nutils, ...). Those cases live in
+repositories of their own and evolve independently of preCICE, so the harness
+for them is intentionally not part of this repository. It would be a good fit
+for the [system tests](https://github.com/precice/tutorials) once they support
+running a tutorial against the mock.

@@ -1,4 +1,9 @@
-# preCICE Mock Participant
+---
+title: The preCICE Mock Participant
+permalink: tooling-mock.html
+keywords: tooling, mock, testing, adapter, development
+summary: "A lightweight implementation of the preCICE API, which allows running and testing a solver or adapter without a coupling partner."
+---
 
 A lightweight mock implementation of the preCICE Participant API for testing and developing adapters: run your solver against the mock — without a coupling partner and without the full preCICE stack — to validate API usage, exercise error paths, and run adapter tests in CI.
 
@@ -23,7 +28,7 @@ The mock needs a proper subset of the [dependencies of preCICE](https://precice.
 
 Boost, PETSc, and network communication libraries are not needed.
 
-The mock does not link against `libprecice`; it re-implements the `Participant` API in [preciceMocked.cpp](preciceMocked.cpp). From preCICE itself it only uses a few headers (exception types, type aliases, the `span` shim, version constants) and the bundled fmt library.
+The mock does not link against `libprecice`; it re-implements the `Participant` API in [preciceMocked.cpp](https://github.com/precice/precice/blob/develop/extras/mock/preciceMocked.cpp). From preCICE itself it only uses a few headers (exception types, type aliases, the `span` shim, version constants) and the bundled fmt library.
 
 ## How to use
 
@@ -125,7 +130,7 @@ Use your standard, valid preCICE configuration file — the mock needs no dedica
 
 ### Mock configuration (optional)
 
-The mock behavior can be adjusted with an optional file `precice-mock-config.xml`, placed in the same directory as the preCICE configuration file. An example can be found in this folder: [precice-mock-config.xml](precice-mock-config.xml).
+The mock behavior can be adjusted with an optional file `precice-mock-config.xml`, placed in the same directory as the preCICE configuration file. An example is available in the preCICE repository: [precice-mock-config.xml](https://github.com/precice/precice/blob/develop/extras/mock/precice-mock-config.xml).
 
 #### Logging modes
 
@@ -137,7 +142,7 @@ The mock supports two logging modes:
   <logging-mode mode="mock" />
   ```
 
-- **PrecICE mode**: Verbose output that mimics the real preCICE library, showing detailed initialization, mesh setup, and shutdown messages with the `---[precice]` prefix.
+- **preCICE mode**: Verbose output that mimics the real preCICE library, showing detailed initialization, mesh setup, and shutdown messages with the `---[precice]` prefix.
 
   ```xml
   <logging-mode mode="precice" />
