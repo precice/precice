@@ -7,6 +7,7 @@
 #include "com/MPIRequest.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/impl/Types.hpp"
+#include "utils/assertion.hpp"
 #include "utils/span_tools.hpp"
 
 template <size_t>
@@ -200,14 +201,23 @@ void MPICommunication::receive(precice::span<int> itemsToReceive, Rank rankSende
   PRECICE_TRACE(itemsToReceive.size());
   rankSender = adjustRank(rankSender);
 
-  MPI_Status status;
+#ifndef PRECICE_NO_ASSERTIONS
+  {
+    MPI_Status status;
+    MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
+    int received = 0;
+    MPI_Get_count(&status, MPI_INT, &received);
+    PRECICE_ASSERT(received == itemsToReceive.size(), received, itemsToReceive.size());
+  }
+#endif
+
   MPI_Recv(itemsToReceive.data(),
            itemsToReceive.size(),
            MPI_INT,
            rank(rankSender),
            0,
            communicator(rankSender),
-           &status);
+           MPI_STATUS_IGNORE);
 }
 
 void MPICommunication::receive(precice::span<double> itemsToReceive, Rank rankSender)
@@ -215,14 +225,23 @@ void MPICommunication::receive(precice::span<double> itemsToReceive, Rank rankSe
   PRECICE_TRACE(itemsToReceive.size());
   rankSender = adjustRank(rankSender);
 
-  MPI_Status status;
+#ifndef PRECICE_NO_ASSERTIONS
+  {
+    MPI_Status status;
+    MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
+    int received = 0;
+    MPI_Get_count(&status, MPI_DOUBLE, &received);
+    PRECICE_ASSERT(received == itemsToReceive.size(), received, itemsToReceive.size());
+  }
+#endif
+
   MPI_Recv(itemsToReceive.data(),
            itemsToReceive.size(),
            MPI_DOUBLE,
            rank(rankSender),
            0,
            communicator(rankSender),
-           &status);
+           MPI_STATUS_IGNORE);
 }
 
 PtrRequest MPICommunication::aReceive(precice::span<double> itemsToReceive, Rank rankSender)
@@ -247,14 +266,21 @@ void MPICommunication::receive(double &itemToReceive, Rank rankSender)
   PRECICE_TRACE(rankSender);
   rankSender = adjustRank(rankSender);
 
+#ifndef PRECICE_NO_ASSERTIONS
   MPI_Status status;
+  MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
+  int received = 0;
+  MPI_Get_count(&status, MPI_DOUBLE, &received);
+  PRECICE_ASSERT(received == 1, received);
+#endif
+
   MPI_Recv(&itemToReceive,
            1,
            MPI_DOUBLE,
            rank(rankSender),
            0,
            communicator(rankSender),
-           &status);
+           MPI_STATUS_IGNORE);
   PRECICE_DEBUG("Received {} from rank {}", itemToReceive, rankSender);
 }
 
@@ -268,14 +294,21 @@ void MPICommunication::receive(int &itemToReceive, Rank rankSender)
   PRECICE_TRACE(rankSender);
   rankSender = adjustRank(rankSender);
 
+#ifndef PRECICE_NO_ASSERTIONS
   MPI_Status status;
+  MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
+  int received = 0;
+  MPI_Get_count(&status, MPI_INT, &received);
+  PRECICE_ASSERT(received == 1, received);
+#endif
+
   MPI_Recv(&itemToReceive,
            1,
            MPI_INT,
            rank(rankSender),
            0,
            communicator(rankSender),
-           &status);
+           MPI_STATUS_IGNORE);
   PRECICE_DEBUG("Received {} from rank {}", itemToReceive, rankSender);
 }
 
@@ -301,14 +334,21 @@ void MPICommunication::receive(bool &itemToReceive, Rank rankSender)
   PRECICE_TRACE(rankSender);
   rankSender = adjustRank(rankSender);
 
+#ifndef PRECICE_NO_ASSERTIONS
   MPI_Status status;
+  MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
+  int received = 0;
+  MPI_Get_count(&status, MPI_BOOL, &received);
+  PRECICE_ASSERT(received == 1, received);
+#endif
+
   MPI_Recv(&itemToReceive,
            1,
            MPI_BOOL,
            rank(rankSender),
            0,
            communicator(rankSender),
-           &status);
+           MPI_STATUS_IGNORE);
   PRECICE_DEBUG("Received {} from rank {}", itemToReceive, rankSender);
 }
 
