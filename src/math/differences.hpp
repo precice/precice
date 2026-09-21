@@ -19,13 +19,9 @@ constexpr bool equals(const Eigen::MatrixBase<DerivedA> &A,
 /// Compares two scalar (arithmetic) types
 inline bool equals(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  auto d = std::abs(a - b);
-  // Handle differences close to 0
-  if (d < tolerance) {
-    return true;
-  }
-  // Handles larger difference
-  return (d <= tolerance * std::max(std::abs(a), std::abs(b)));
+  auto d     = std::abs(a - b);
+  auto scale = std::max(1.0, std::max(std::abs(a), std::abs(b)));
+  return d <= tolerance * scale;
 }
 
 inline bool isZero(double a, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
