@@ -29,28 +29,24 @@ inline bool isZero(double a, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexc
   return std::abs(a) < tolerance;
 }
 
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type greater(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+inline bool greater(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  return A - B > tolerance;
+  return a > b + tolerance;
 }
 
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type greaterEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+inline bool greaterEquals(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  return A - B >= -tolerance;
+  return (a > b) || ::precice::math::equals(a, b, tolerance);
 }
 
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type smaller(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+inline bool smaller(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  return A - B < -tolerance;
+  return a + tolerance < b;
 }
 
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type smallerEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+inline bool smallerEquals(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  return A - B <= tolerance;
+  return (a < b) || ::precice::math::equals(a, b, tolerance);
 }
 
 } // namespace precice::math
