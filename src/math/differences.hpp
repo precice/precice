@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <cstdlib>
 
 namespace precice::math {
 
@@ -16,10 +17,15 @@ constexpr bool equals(const Eigen::MatrixBase<DerivedA> &A,
 }
 
 /// Compares two scalar (arithmetic) types
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type equals(const Scalar a, const Scalar b, const Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+inline bool equals(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  return std::abs(a - b) <= tolerance;
+  auto d = std::abs(a - b);
+  // Handle differences close to 0
+  if (d < tolerance) {
+    return true;
+  }
+  // Handles larger difference
+  return (d <= tolerance * std::max(std::abs(a), std::abs(b)));
 }
 
 inline bool isZero(double a, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
