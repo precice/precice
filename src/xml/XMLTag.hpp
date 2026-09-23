@@ -202,6 +202,27 @@ public:
   /// reads all attributes of this tag
   void readAttributes(const std::map<std::string, std::string> &aAttributes);
 
+  /**
+   * @brief Records where this tag was found in the configuration file.
+   *
+   * @param[in] line 1-based line number of the opening tag, or -1 if unknown.
+   * @param[in] column 1-based column of the opening tag, or -1 if unknown.
+   * @param[in] sourceLine the full text of that source line, used for error context.
+   */
+  void setLocation(int line, int column, std::string sourceLine);
+
+  /// Returns the 1-based line number of this tag, or -1 if unknown.
+  int getLine() const;
+
+  /// Returns the 1-based column of this tag, or -1 if unknown.
+  int getColumn() const;
+
+  /// Returns whether a location was set for this tag via setLocation().
+  bool hasLocation() const;
+
+  /// Appends the location (if any) and the corresponding source line to a message.
+  std::string formatMessage(std::string_view message) const;
+
 private:
   mutable logging::Logger _log{"xml::XMLTag"};
 
@@ -235,6 +256,12 @@ private:
   void areAllSubtagsConfigured() const;
 
   void resetAttributes();
+
+  int _line   = -1;
+  int _column = -1;
+
+  /// The text of the source line this tag was found on, if any.
+  std::string _sourceLine;
 };
 
 /// Returns the name of an Attribute
