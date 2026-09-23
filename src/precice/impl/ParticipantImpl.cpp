@@ -428,7 +428,7 @@ void ParticipantImpl::advance(
 
   if (_allowsRemeshing) {
     if (isAtWindowEnd) {
-      Event e("reinitSync", profiling::Synchronize);
+      Event e("reinitSync", profiling::Fundamental, profiling::Synchronize);
       auto  totalMeshChanges = getTotalMeshChanges();
       clearStamplesOfChangedMeshes(totalMeshChanges);
 
