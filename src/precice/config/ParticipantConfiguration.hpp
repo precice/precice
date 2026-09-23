@@ -7,7 +7,7 @@
 #include "action/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "logging/Logger.hpp"
-#include "mapping/SharedPointer.hpp"
+#include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
@@ -122,7 +122,7 @@ private:
 
   mesh::PtrMeshConfiguration _meshConfig;
 
-  mapping::PtrMappingConfiguration _mappingConfig;
+  std::unique_ptr<mapping::MappingConfiguration> _mappingConfig;
 
   action::PtrActionConfiguration _actionConfig;
 
@@ -141,8 +141,6 @@ private:
   const mesh::PtrData &getData(
       const mesh::PtrMesh &mesh,
       const std::string   &nameData) const;
-
-  mapping::PtrMapping getMapping(const std::string &mappingName);
 
   // Does this participant already define a primary tag?
   // This context information is needed in xmlEndTagCallback to create a default
