@@ -428,11 +428,13 @@ void ParticipantImpl::advance(
 
   if (_allowsRemeshing) {
     if (isAtWindowEnd) {
-      auto totalMeshChanges = getTotalMeshChanges();
+      Event e("reinitSync", profiling::Fundamental, profiling::Synchronize);
+      auto  totalMeshChanges = getTotalMeshChanges();
       clearStamplesOfChangedMeshes(totalMeshChanges);
 
       int sumOfChanges = std::accumulate(totalMeshChanges.begin(), totalMeshChanges.end(), 0);
       if (reinitHandshake(sumOfChanges)) {
+        e.stop();
         reinitialize();
       }
     } else {
@@ -1889,7 +1891,7 @@ ParticipantImpl::MeshChanges ParticipantImpl::getTotalMeshChanges() const
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_allowsRemeshing);
-  Event e("remesh.exchangeLocalMeshChanges", profiling::Synchronize);
+  Event e("gatherLocalMeshChanges", profiling::Synchronize);
 
   // Gather local changes
   std::vector<double> localMeshChanges;
@@ -1924,12 +1926,13 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_allowsRemeshing);
-  Event e("remesh.exchangeRemoteMeshChanges", profiling::Synchronize);
 
+  bool swarmReinitRequired = false;
   if (not utils::IntraComm::isSecondary()) {
+    Event e("exchangeRemoteMeshChanges", profiling::Synchronize);
     PRECICE_DEBUG("Remeshing is{} required by this participant.", (requestReinit ? "" : " not"));
 
-    bool swarmReinitRequired = requestReinit;
+    swarmReinitRequired = requestReinit;
     for (auto &iter : _m2ns) {
       PRECICE_DEBUG("Coordinating remeshing with {}", iter.first);
       bool  received = false;
@@ -1944,14 +1947,11 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
       swarmReinitRequired |= received;
     }
     PRECICE_DEBUG("Coordinated that overall{} remeshing is required.", (swarmReinitRequired ? "" : " no"));
-
-    utils::IntraComm::broadcast(swarmReinitRequired);
-    return swarmReinitRequired;
-  } else {
-    bool swarmReinitRequired = false;
-    utils::IntraComm::broadcast(swarmReinitRequired);
-    return swarmReinitRequired;
   }
+
+  Event e("broadcastLocalMeshChanges", profiling::Synchronize);
+  utils::IntraComm::broadcast(swarmReinitRequired);
+  return swarmReinitRequired;
 }
 
 void ParticipantImpl::startProfilingSection(std::string_view sectionName)
