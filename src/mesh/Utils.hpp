@@ -156,4 +156,13 @@ std::optional<std::size_t> locateInvalidVertexID(const Mesh &mesh, const Contain
 /// Given a Mesh and a bounding box, counts all vertices within the bounding box
 std::size_t countVerticesInBoundingBox(mesh::PtrMesh mesh, const mesh::BoundingBox &bb);
 
+/**
+ * @brief Estimates the mesh resolution by finding the three closest vertices to some sample vertex.
+ * It might trigger the creation of an RTree.
+ *
+ * This function can be used to estimate a lower bound on the support radius.
+ * Therefore, it is not required to be highly accurate, but rather to be in the right order of magnitude.
+ */
+double estimateMeshResolution(mesh::Mesh &inputMesh);
+
 } // namespace precice::mesh
