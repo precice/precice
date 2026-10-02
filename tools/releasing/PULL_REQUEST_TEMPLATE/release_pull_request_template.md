@@ -85,9 +85,6 @@ Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://
 
 | State | Tester | Test |
 | --- | --- | --- |
-| | | MATLAB / MATLAB [ODEs](https://github.com/precice/matlab-bindings/tree/develop/tutorial) |
-| | | Solverdummy [MATLAB](https://github.com/precice/matlab-bindings/tree/develop/solverdummy) |
-| | | Alya |
 | | | SuperMUC |
 
 ## Post-release
