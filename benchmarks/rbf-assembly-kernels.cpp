@@ -13,20 +13,20 @@ void assembleA(benchmark::State &state, RBF f, mapping::Polynomial polynomial)
   std::array<bool, 3> activeAxis{true, true, true};
   const int           dimension = 3;
 
-  mesh::Mesh inMesh("inMesh", dimension, -1);
+  mesh::PtrMesh inMesh = std::make_shared<mesh::Mesh>("inMesh", dimension, -1);
 
   for (int i = 0; i < 10; ++i)
     for (int j = 0; j < 10; ++j)
-      inMesh.createVertex(Eigen::Vector3d(0, i * 3.1, j * 1.4315));
+      inMesh->createVertex(Eigen::Vector3d(0, i * 3.1, j * 1.4315));
 
-  mesh::Mesh outMesh("outMesh", dimension, -1);
+  mesh::PtrMesh outMesh = std::make_shared<mesh::Mesh>("outMesh", dimension, -1);
 
   for (int i = 0; i < 10; ++i)
     for (int j = 0; j < 10; ++j)
-      outMesh.createVertex(Eigen::Vector3d(1, i * 1.2111, j * 5.4315));
+      outMesh->createVertex(Eigen::Vector3d(1, i * 1.2111, j * 5.4315));
 
   for (auto _ : state) {
-    Eigen::MatrixXd mat = mapping::buildMatrixA(f, inMesh, boost::irange<Eigen::Index>(0, inMesh.nVertices()), outMesh, boost::irange<Eigen::Index>(0, outMesh.nVertices()), activeAxis, polynomial);
+    Eigen::MatrixXd mat = mapping::buildMatrixA(f, inMesh, boost::irange<Eigen::Index>(0, inMesh->nVertices()), outMesh, boost::irange<Eigen::Index>(0, outMesh->nVertices()), activeAxis, polynomial);
     benchmark::DoNotOptimize(mat);
   }
 }

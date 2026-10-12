@@ -171,6 +171,7 @@ target_sources(preciceCore
     src/m2n/SharedPointer.hpp
     src/m2n/config/M2NConfiguration.cpp
     src/m2n/config/M2NConfiguration.hpp
+    src/mapping/AutoTunedRBFSolver.hpp
     src/mapping/AxialGeoMultiscaleMapping.cpp
     src/mapping/AxialGeoMultiscaleMapping.hpp
     src/mapping/BarycentricBaseMapping.cpp
@@ -209,6 +210,7 @@ target_sources(preciceCore
     src/mapping/impl/BasisFunctions.hpp
     src/mapping/impl/CreateClustering.hpp
     src/mapping/impl/MappingDataCache.hpp
+    src/mapping/impl/RBFParameterTuner.hpp
     src/mapping/impl/SphericalVertexCluster.hpp
     src/math/Bspline.cpp
     src/math/Bspline.hpp
