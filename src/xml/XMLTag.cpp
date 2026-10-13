@@ -142,6 +142,26 @@ int XMLTag::getIntAttributeValue(const std::string &name, std::optional<int> def
   PRECICE_UNREACHABLE("The XMLAttribute doesn't exist, check its default.");
 }
 
+std::optional<int> XMLTag::getOptionalIntAttributeValue(const std::string &name) const
+{
+  PRECICE_TRACE(name);
+  auto iter = findAttribute(_attributes, name);
+  PRECICE_ASSERT(iter != _attributes.end(), "The XMLAttribute doesn't exist.");
+  PRECICE_ASSERT(std::holds_alternative<XMLAttribute<int>>(*iter));
+  const auto &attr = std::get<XMLAttribute<int>>(*iter);
+  return attr.getOptionalValue();
+}
+
+std::optional<double> XMLTag::getOptionalDoubleAttributeValue(const std::string &name) const
+{
+  PRECICE_TRACE(name);
+  auto iter = findAttribute(_attributes, name);
+  PRECICE_ASSERT(iter != _attributes.end(), "The XMLAttribute doesn't exist.");
+  PRECICE_ASSERT(std::holds_alternative<XMLAttribute<double>>(*iter));
+  const auto &attr = std::get<XMLAttribute<double>>(*iter);
+  return attr.getOptionalValue();
+}
+
 std::string XMLTag::getStringAttributeValue(const std::string &name, std::optional<std::string> default_value) const
 {
   PRECICE_TRACE(name);

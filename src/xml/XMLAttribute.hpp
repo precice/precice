@@ -4,6 +4,7 @@
 #include <exception>
 #include <initializer_list>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <type_traits>
@@ -30,7 +31,7 @@ public:
   };
 
   XMLAttribute(std::string name, ATTRIBUTE_T defaultValue)
-      : _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue))
+      : _name(std::move(name)), _hasDefaultValue(true), _isRequired(false), _defaultValue(std::move(defaultValue))
   {
     PRECICE_ASSERT(utils::isKebabStyle(_name), _name);
   };
@@ -78,6 +79,14 @@ public:
     return _hasValidation;
   };
 
+  /// Marks this attribute as optional without a default value.
+  /// When missing in the XML, no error is raised and the stored value remains disengaged.
+  XMLAttribute &setOptional()
+  {
+    _isRequired = false;
+    return *this;
+  }
+
   void readValue(std::string_view tagName, const std::map<std::string, std::string> &aAttributes);
 
   const std::string &getName() const
@@ -85,10 +94,20 @@ public:
     return _name;
   };
 
+  /// Returns the attribute value.
+  /// For required attributes this is always engaged; for optional ones callers
+  /// should ensure a value is present (e.g. via getOptionalValue()).
   const ATTRIBUTE_T &getValue() const
   {
-    return _value;
+    PRECICE_ASSERT(_value.has_value());
+    return *_value;
   };
+
+  /// Returns the optional attribute value.
+  const std::optional<ATTRIBUTE_T> &getOptionalValue() const
+  {
+    return _value;
+  }
 
   void setRead(bool read)
   {
@@ -109,9 +128,11 @@ private:
 
   bool _read = false;
 
-  ATTRIBUTE_T _value{};
+  std::optional<ATTRIBUTE_T> _value;
 
   bool _hasDefaultValue = false;
+
+  bool _isRequired = true;
 
   ATTRIBUTE_T _defaultValue{};
 
@@ -124,6 +145,12 @@ private:
   typename std::enable_if<
       std::is_same<VALUE_T, ATTRIBUTE_T>::value && not std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
   set(ATTRIBUTE_T &toSet, const VALUE_T &setter);
+
+  /// Sets non Eigen::VectorXd type values into an std::optional.
+  template <typename VALUE_T>
+  typename std::enable_if<
+      std::is_same<VALUE_T, ATTRIBUTE_T>::value && not std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
+  set(std::optional<ATTRIBUTE_T> &toSet, const VALUE_T &setter);
 
   /// Sets Eigen::VectorXd type values by clearing and copy.
   template <typename VALUE_T>
@@ -165,18 +192,26 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::m
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
-    PRECICE_CHECK(_hasDefaultValue, "The tag <{}> in the configuration is missing required attribute \"{}\".", tagName, _name);
-    set(_value, _defaultValue);
+    PRECICE_CHECK(!_isRequired || _hasDefaultValue,
+                  "The tag <{}> in the configuration is missing required attribute \"{}\".",
+                  tagName, _name);
+
+    if (_hasDefaultValue) {
+      set(_value, _defaultValue);
+    } else {
+      _value.reset();
+    }
   } else {
+    ATTRIBUTE_T parsedValue{};
     try {
-      readValueSpecific(position->second, _value);
+      readValueSpecific(position->second, parsedValue);
     } catch (const std::exception &e) {
       PRECICE_ERROR(e.what());
     }
     if (_hasValidation) {
-      if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
+      if (std::find(_options.begin(), _options.end(), parsedValue) == _options.end()) {
         std::ostringstream stream;
-        stream << "Invalid value \"" << _value << "\" of attribute \""
+        stream << "Invalid value \"" << parsedValue << "\" of attribute \""
                << getName() << "\": ";
         // print first
         auto first = _options.begin();
@@ -190,8 +225,13 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::m
         PRECICE_ERROR(stream.str());
       }
     }
+    _value = std::move(parsedValue);
   }
-  PRECICE_DEBUG("Read valid attribute \"{}\" value = {}", getName(), _value);
+  if (_value.has_value()) {
+    PRECICE_DEBUG("Read valid attribute \"{}\" value = {}", getName(), *_value);
+  } else {
+    PRECICE_DEBUG("Attribute \"{}\" not provided and has no default value", getName());
+  }
 }
 
 template <typename ATTRIBUTE_T>
@@ -212,6 +252,17 @@ typename std::enable_if<
 XMLAttribute<ATTRIBUTE_T>::set(
     ATTRIBUTE_T   &toSet,
     const VALUE_T &setter)
+{
+  toSet = setter;
+}
+
+template <typename ATTRIBUTE_T>
+template <typename VALUE_T>
+typename std::enable_if<
+    std::is_same<VALUE_T, ATTRIBUTE_T>::value && not std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
+XMLAttribute<ATTRIBUTE_T>::set(
+    std::optional<ATTRIBUTE_T> &toSet,
+    const VALUE_T              &setter)
 {
   toSet = setter;
 }
