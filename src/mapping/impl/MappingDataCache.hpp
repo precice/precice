@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include "mapping/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
 #include "time/Sample.hpp"

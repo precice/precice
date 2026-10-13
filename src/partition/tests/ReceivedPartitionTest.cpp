@@ -269,8 +269,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_PRIMARY_RANK, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
     part.communicate();
     part.compute();
 
@@ -325,8 +325,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
     part.communicate();
     part.compute();
 
@@ -376,8 +376,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
     double            safetyFactor = 0.1;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_PRIMARY_RANK, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
     part.communicate();
     part.compute();
 
@@ -432,8 +432,8 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
     double            safetyFactor = 20.0;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::NO_FILTER, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
     part.communicate();
     part.compute();
 
@@ -519,8 +519,8 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
     double            safetyFactor = 20.0;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::NO_FILTER, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
     part.communicate();
     part.compute();
 
@@ -594,8 +594,8 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
     double            safetyFactor = 20.0;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::NO_FILTER, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
     part.communicate();
     part.compute();
 
@@ -677,8 +677,8 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
     double            safetyFactor = 20.0;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::NO_FILTER, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
     part.communicate();
     part.compute();
 
@@ -762,8 +762,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
     double            safetyFactor = 20.0;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_PRIMARY_RANK, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
     part.communicate();
     part.compute();
 
@@ -840,7 +840,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
     double            safetyFactor = 20.0;
     ReceivedPartition part(pMesh, ReceivedPartition::ON_PRIMARY_RANK, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
+    part.addFromMapping(boundingFromMapping.get());
     part.communicate();
     part.compute();
 
@@ -916,7 +916,7 @@ BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
 
     double            safetyFactor = 0.1;
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_PRIMARY_RANK, safetyFactor);
-    part.addFromMapping(boundingFromMapping);
+    part.addFromMapping(boundingFromMapping.get());
     part.addM2N(m2n);
     part.communicate();
     part.compute();
@@ -1005,8 +1005,8 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::NO_FILTER, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
     part.compareBoundingBoxes();
   }
 }
@@ -1075,8 +1075,8 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::NO_FILTER, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
     part.compareBoundingBoxes();
   }
 }
@@ -1104,8 +1104,8 @@ void testParallelSetOwnerInformation(PtrMesh mesh, int dimensions)
   ReceivedPartition part(mesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
   part.addM2N(m2n);
 
-  part.addFromMapping(boundingFromMapping);
-  part.addToMapping(boundingToMapping);
+  part.addFromMapping(boundingFromMapping.get());
+  part.addToMapping(boundingToMapping.get());
 
   mesh->computeBoundingBox();
 
@@ -1556,10 +1556,10 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
 
     ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
     part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping1);
-    part.addToMapping(boundingToMapping1);
-    part.addFromMapping(boundingFromMapping2);
-    part.addToMapping(boundingToMapping2);
+    part.addFromMapping(boundingFromMapping1.get());
+    part.addToMapping(boundingToMapping1.get());
+    part.addFromMapping(boundingFromMapping2.get());
+    part.addToMapping(boundingToMapping2.get());
     part.communicate();
     part.compute();
 

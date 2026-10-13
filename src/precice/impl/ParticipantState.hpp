@@ -17,7 +17,7 @@
 #include "io/ExportContext.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "logging/Logger.hpp"
-#include "mapping/SharedPointer.hpp"
+#include "mapping/Mapping.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/MeshContext.hpp"
@@ -126,6 +126,9 @@ public:
 
   /// Adds a configured write \ref Mapping to the ParticipantState
   void addWriteMappingContext(const MappingContext &mappingContext);
+
+  /// Takes ownership of a configured \ref Mapping and returns a non-owning handle.
+  mapping::Mapping *addMapping(std::unique_ptr<mapping::Mapping> mapping);
 
   /// Adds a configured \ref WatchPoint to the ParticipantState
   void addWatchPoint(const PtrWatchPoint &watchPoint);
@@ -409,6 +412,9 @@ private:
 
   /// Write mapping contexts used by the participant.
   std::vector<MappingContext> _writeMappingContexts;
+
+  /// Owned mapping implementations used by this participant.
+  std::vector<std::unique_ptr<mapping::Mapping>> _mappings;
 
   /// Mesh contexts used by the participant.
   std::vector<MeshContextVariant> _usedMeshContexts;

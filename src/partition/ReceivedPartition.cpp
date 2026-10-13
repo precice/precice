@@ -12,7 +12,6 @@
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
-#include "mapping/SharedPointer.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Filter.hpp"
 #include "mesh/Mesh.hpp"
@@ -493,13 +492,13 @@ void ReceivedPartition::prepareBoundingBox()
   // For just-in-time mapping, we enter the loops here for the (just-in-time) mapping we hold,
   // however, any bounding box operation will be NOP because bounding boxes around local
   // meshes are empty
-  for (mapping::PtrMapping &fromMapping : _fromMappings) {
+  for (mapping::Mapping *fromMapping : _fromMappings) {
     auto other_bb = fromMapping->getOutputMesh()->getBoundingBox();
     other_bb.scaleBy(_safetyFactor);
     _bb.expandBy(other_bb);
     _boundingBoxPrepared = true;
   }
-  for (mapping::PtrMapping &toMapping : _toMappings) {
+  for (mapping::Mapping *toMapping : _toMappings) {
     auto other_bb = toMapping->getInputMesh()->getBoundingBox();
     other_bb.scaleBy(_safetyFactor);
     _bb.expandBy(other_bb);
@@ -513,8 +512,8 @@ void ReceivedPartition::prepareBoundingBox()
     // In case we have an just-in-time mapping associated to this direct access
     // we need to extend the bounding box for accuracy reasons
     // the behavior is then comparable to a conventional mapping
-    if (std::any_of(_fromMappings.begin(), _fromMappings.end(), [](auto m) { return m->isJustInTimeMapping(); }) ||
-        std::any_of(_toMappings.begin(), _toMappings.end(), [](auto m) { return m->isJustInTimeMapping(); })) {
+    if (std::any_of(_fromMappings.begin(), _fromMappings.end(), [](auto *m) { return m->isJustInTimeMapping(); }) ||
+        std::any_of(_toMappings.begin(), _toMappings.end(), [](auto *m) { return m->isJustInTimeMapping(); })) {
       // The (preliminary) repartitioning is based on the _bb
       // we extend the _bb here and later on enable the (just-in-time) mappings
       // to apply any kind of tagging to account for the halo layer added here
@@ -937,20 +936,20 @@ void ReceivedPartition::tagMeshFirstRound()
     }
   }
 
-  for (const mapping::PtrMapping &fromMapping : _fromMappings) {
+  for (mapping::Mapping *fromMapping : _fromMappings) {
     fromMapping->tagMeshFirstRound();
   }
-  for (const mapping::PtrMapping &toMapping : _toMappings) {
+  for (mapping::Mapping *toMapping : _toMappings) {
     toMapping->tagMeshFirstRound();
   }
 }
 
 void ReceivedPartition::tagMeshSecondRound()
 {
-  for (const mapping::PtrMapping &fromMapping : _fromMappings) {
+  for (mapping::Mapping *fromMapping : _fromMappings) {
     fromMapping->tagMeshSecondRound();
   }
-  for (const mapping::PtrMapping &toMapping : _toMappings) {
+  for (mapping::Mapping *toMapping : _toMappings) {
     toMapping->tagMeshSecondRound();
   }
 }
