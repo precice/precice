@@ -23,9 +23,9 @@ BOOST_AUTO_TEST_CASE(ResetWhileIterating)
 
   qt.setVertices({0.0, y, 1.0, y})
       .initialize()
-      // TW 1 It 1 currently not allowed
+      // TW 1 It 1 - remeshing after init is now allowed (issue #2093)
       .writeCheckpoint();
-  BOOST_CHECK_THROW(qt.resetMesh(), ::precice::Error);
+  // resetMesh() after initialize but before first advance is now permitted
   qt.readCheckpoint()
       .advance()
       // TW 1 It 2
