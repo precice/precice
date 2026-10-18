@@ -110,7 +110,7 @@ PtrMapping instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int d
 }
 
 // Constructs the RBF function based on the functionType
-rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, double shapeParameter)
+rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, double shapeParameter, double cutoffThreshold)
 {
   try {
     switch (functionType) {
@@ -145,7 +145,7 @@ rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, dou
       return mapping::InverseMultiquadrics(shapeParameter);
     }
     case BasisFunction::Gaussian: {
-      return mapping::Gaussian(shapeParameter);
+      return mapping::Gaussian(shapeParameter, std::numeric_limits<double>::infinity(), cutoffThreshold);
     }
     default:
       PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
@@ -161,10 +161,10 @@ rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, dou
 // constructor arguments are just forwarded. The first argument (BasisFunction) indicates then the actual instantiation to return.
 template <RBFBackend T, typename... Args>
 PtrMapping getRBFMapping(BasisFunction functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
-                         Args &&...args)
+                         double cutoffThreshold, Args &&...args)
 {
   // First, construct the RBF function
-  auto functionVariant = constructRBF(functionType, supportRadius, shapeParameter);
+  auto functionVariant = constructRBF(functionType, supportRadius, shapeParameter, cutoffThreshold);
   // ... and instantiate the corresponding RBF mapping class
   return std::visit([&](auto &&func) { return instantiateRBFMapping<T>(constraint, dimension, func, std::forward<Args>(args)...); }, functionVariant);
 }
@@ -373,10 +373,13 @@ MappingConfiguration::MappingConfiguration(
 
   // For the Gaussian, we need default values as the user can pass a support radius or a shape parameter
   std::list<XMLTag> GaussRBF{
-      XMLTag{*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Gaussian basis function accepting a support radius or a shape parameter.")};
+      XMLTag{*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Gaussian basis function accepting a support radius or a shape parameter, with an optional cut-off threshold.")};
   attrShapeParam.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
   attrSupportRadius.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
-  addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius});
+  auto attrCutoffThreshold = XMLAttribute<double>(ATTR_CUTOFF_THRESHOLD)
+                                 .setDefaultValue(Gaussian::cutoffThreshold)
+                                 .setDocumentation("Cut-off threshold for the Gaussian RBF. Determines the support radius from the shape parameter or vice versa. Defaults to 1e-9.");
+  addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius, attrCutoffThreshold});
   addSubtagsToParents(GaussRBF, rbfIterativeTags);
   addSubtagsToParents(GaussRBF, rbfDirectTags);
   addSubtagsToParents(GaussRBF, pumDirectTags);
@@ -503,21 +506,26 @@ void MappingConfiguration::xmlTagCallback(
                                                             "from mesh \"{}\" to mesh \"{}\".",
                   _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
 
-    std::string basisFctName   = tag.getName();
-    double      supportRadius  = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
-    double      shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
+    std::string basisFctName    = tag.getName();
+    double      supportRadius   = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
+    double      shapeParameter  = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
+    double      cutoffThreshold = tag.getDoubleAttributeValue(ATTR_CUTOFF_THRESHOLD, Gaussian::cutoffThreshold);
 
     _rbfConfig.basisFunction        = parseBasisFunctions(basisFctName);
     _rbfConfig.basisFunctionDefined = true;
     // The Gaussian RBF is always treated as a shape-parameter RBF. Hence, we have to convert the support radius, if necessary
     if (_rbfConfig.basisFunction == BasisFunction::Gaussian) {
-      const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
-                                 (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
+      const bool hasShape      = std::isfinite(shapeParameter);
+      const bool hasRadius     = std::isfinite(supportRadius);
+      const bool exactlyOneSet = hasShape != hasRadius;
       PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
+      PRECICE_CHECK(cutoffThreshold > 0 && cutoffThreshold < 1,
+                    "The \"cutoff-threshold\" for the Gaussian RBF must be between 0 and 1 (exclusive). Received: {}.", cutoffThreshold);
 
-      if (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) {
-        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
+      if (hasRadius) {
+        shapeParameter = std::sqrt(-std::log(cutoffThreshold)) / supportRadius;
       }
+      _rbfConfig.cutoffThreshold = cutoffThreshold;
     }
 
     _rbfConfig.supportRadius  = supportRadius;
@@ -841,20 +849,20 @@ void MappingConfiguration::finishRBFConfiguration()
   // 1. the CPU executor
   if (_executorConfig->executor == ExecutorConfiguration::Executor::CPU) {
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
+      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.cutoffThreshold, _rbfConfig.deadAxis, _rbfConfig.polynomial);
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
 #ifndef PRECICE_NO_PETSC
       // for petsc initialization
       utils::Petsc::initialize(utils::Parallel::current()->comm);
 
-      mapping.mapping = getRBFMapping<RBFBackend::PETSc>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial);
+      mapping.mapping = getRBFMapping<RBFBackend::PETSc>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.cutoffThreshold, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial);
 #else
       PRECICE_ERROR("The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
       _ginkgoParameter          = GinkgoParameter();
       _ginkgoParameter.executor = "cpu";
-      mapping.mapping           = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter);
+      mapping.mapping           = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.cutoffThreshold, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }
@@ -888,7 +896,7 @@ void MappingConfiguration::finishRBFConfiguration()
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
 #ifndef PRECICE_NO_GINKGO
       _ginkgoParameter.solver = "qr-solver";
-      mapping.mapping         = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
+      mapping.mapping         = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.cutoffThreshold, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
 #else
       PRECICE_ERROR("The selected direct solver for the global RBF mapping on executor {} from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
@@ -896,14 +904,14 @@ void MappingConfiguration::finishRBFConfiguration()
 #ifndef PRECICE_NO_GINKGO
       _ginkgoParameter.solver       = "cg-solver";
       _ginkgoParameter.residualNorm = _rbfConfig.solverRtol;
-      mapping.mapping               = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
+      mapping.mapping               = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.cutoffThreshold, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
 #else
       PRECICE_ERROR("The selected iterative solver for the global RBF mapping on executor {} from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
 #ifndef PRECICE_NO_KOKKOS_KERNELS
       PRECICE_CHECK(!(mapping.fromMesh->isJustInTime() || mapping.toMesh->isJustInTime()), "Executor \"{}\" is not implemented as just-in-time mapping.", _ginkgoParameter.executor);
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter, _executorConfig->computeEvaluationOffline);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.cutoffThreshold, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter, _executorConfig->computeEvaluationOffline);
 #else
       PRECICE_ERROR("The selected pu-rbf solver using executor \"{}\" for the mapping from mesh {} to mesh {} requires a preCICE build with Kokkos-kernels enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
