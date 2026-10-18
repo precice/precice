@@ -65,8 +65,9 @@ public:
    * @brief Connects the actual tags of an xml layer with the predefined tags
    * @param DefTags predefined tags
    * @param SubTags actual tags from xml file
+   * @param parentXMLCtx parent context of XML config
    */
-  void connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<precice::xml::XMLTag>> &DefTags, CTagPtrVec &SubTags);
+  void connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<precice::xml::XMLTag>> &DefTags, CTagPtrVec &SubTags, const std::string &parentXMLCtx);
 
   /// Callback for Start-Tag
   void OnStartElement(
