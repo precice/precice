@@ -105,9 +105,6 @@ void ProvidedPartition::communicate()
       Event e("partition.sendGlobalMesh." + _mesh->getName(), profiling::Synchronize);
 
       if (not utils::IntraComm::isSecondary()) {
-        PRECICE_CHECK(globalMesh.nVertices() > 0,
-                      "The provided mesh \"{}\" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize().",
-                      globalMesh.getName());
         com::sendMesh(*m2n->getPrimaryRankCommunication(), 0, globalMesh);
       }
     }
@@ -209,6 +206,7 @@ void ProvidedPartition::prepare()
     // The only rank of the participant contains all vertices
     _mesh->setVertexDistribution([&] {
       mesh::Mesh::VertexDistribution vertexDistribution;
+      vertexDistribution[0].reserve(numberOfVertices);
       for (int i = 0; i < numberOfVertices; i++) {
         vertexDistribution[0].push_back(i);
         _mesh->vertex(i).setGlobalIndex(i);
@@ -225,7 +223,10 @@ void ProvidedPartition::prepare()
     v.setOwner(true);
   }
 
-  PRECICE_ASSERT(_mesh->getGlobalNumberOfVertices() > 0);
+  PRECICE_CHECK(_mesh->getGlobalNumberOfVertices() > 0,
+                "The provided mesh \"{}\" is globally empty. "
+                "Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize().",
+                _mesh->getName());
   PRECICE_ASSERT(!_mesh->getVertexOffsets().empty());
 }
 
