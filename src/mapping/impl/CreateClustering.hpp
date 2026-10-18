@@ -151,7 +151,7 @@ void projectClusterCentersToinputMesh(Vertices &clusterCenters, mesh::PtrMesh me
 {
   std::transform(clusterCenters.begin(), clusterCenters.end(), clusterCenters.begin(), [&](auto &v) {
     if (!v.isTagged()) {
-      auto closestCenter = mesh->index().getClosestVertex(v.getCoords()).index;
+      auto closestCenter = mesh->index().getClosestVertex(v.rawCoords()).index;
       return mesh::Vertex{mesh->vertex(closestCenter).getCoords(), v.getID()};
     } else {
       return v;
@@ -256,7 +256,7 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
   std::vector<double> sampledClusterRadii;
   for (auto s : randomSamples) {
     // ask the index tree for the k-nearest neighbors  in order to estimate the point density
-    auto kNearestVertexIDs = inMesh->index().getClosestVertices(inMesh->vertex(s).getCoords(), verticesPerCluster);
+    auto kNearestVertexIDs = inMesh->index().getClosestVertices(inMesh->vertex(s).rawCoords(), verticesPerCluster);
     // compute the distance of each point to the center
     std::vector<double> squaredRadius(kNearestVertexIDs.size());
     std::transform(kNearestVertexIDs.begin(), kNearestVertexIDs.end(), squaredRadius.begin(), [&inMesh, s](auto i) {

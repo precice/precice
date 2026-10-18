@@ -1,6 +1,7 @@
 #include "NearestNeighborBaseMapping.hpp"
 
 #include <boost/container/flat_set.hpp>
+#include <cmath>
 #include <functional>
 #include <iostream>
 #include "logging/LogMacros.hpp"
@@ -59,14 +60,16 @@ void NearestNeighborBaseMapping::computeMapping()
 
   auto &index = searchSpace->index();
   for (size_t i = 0; i < verticesSize; ++i) {
-    const auto &sourceCoords  = sourceVertices[i].getCoords();
+    const auto &sourceCoords  = sourceVertices[i].rawCoords();
     const auto  matchedVertex = index.getClosestVertex(sourceCoords);
     _vertexIndices[i]         = matchedVertex.index;
 
     // Compute distance between input and output vertiex for the stats
-    const auto &matchCoords = searchSpace->vertex(matchedVertex.index).getCoords();
-    auto        distance    = (sourceCoords - matchCoords).norm();
-    distanceStatistics(distance);
+    const auto &matchCoords = searchSpace->vertex(matchedVertex.index).rawCoords();
+    const auto  d0          = sourceCoords[0] - matchCoords[0];
+    const auto  d1          = sourceCoords[1] - matchCoords[1];
+    const auto  d2          = sourceCoords[2] - matchCoords[2];
+    distanceStatistics(std::sqrt(d0 * d0 + d1 * d1 + d2 * d2));
   }
 
   // For gradient mapping, the calculation of offsets between source and matched vertex necessary

@@ -168,7 +168,7 @@ Index::Index(mesh::Mesh &mesh)
 // Required for the pimpl idiom to work with std::unique_ptr
 Index::~Index() = default;
 
-VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
+VertexMatch Index::getClosestVertex(const mesh::Vertex::RawCoords &sourceCoord)
 {
   PRECICE_TRACE();
 
@@ -181,7 +181,12 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
   return match;
 }
 
-std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoord, int n)
+VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
+{
+  return getClosestVertex(eigenToRaw(sourceCoord));
+}
+
+std::vector<VertexID> Index::getClosestVertices(const mesh::Vertex::RawCoords &sourceCoord, int n)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(!(_mesh->empty()), _mesh->getName());
@@ -194,6 +199,11 @@ std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoo
   return matches;
 }
 
+std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoord, int n)
+{
+  return getClosestVertices(eigenToRaw(sourceCoord), n);
+}
+
 std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord, int n)
 {
   PRECICE_TRACE();
@@ -202,7 +212,7 @@ std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord
 
   std::vector<EdgeMatch> matches;
   matches.reserve(n);
-  rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
+  rtree->query(bgi::nearest(eigenToRaw(sourceCoord), n), boost::make_function_output_iterator([&](size_t matchID) {
                  matches.emplace_back(matchID);
                }));
   return matches;
@@ -215,7 +225,7 @@ std::vector<TriangleMatch> Index::getClosestTriangles(const Eigen::VectorXd &sou
 
   std::vector<TriangleMatch> matches;
   matches.reserve(n);
-  rtree->query(bgi::nearest(sourceCoord, n),
+  rtree->query(bgi::nearest(eigenToRaw(sourceCoord), n),
                boost::make_function_output_iterator([&](TriangleTraits::IndexType const &match) {
                  matches.emplace_back(match.second);
                }));
@@ -268,7 +278,7 @@ std::vector<TetrahedronID> Index::getEnclosingTetrahedra(const Eigen::VectorXd &
   const auto &rtree = _pimpl->getTetraRTree(*_mesh);
 
   std::vector<TetrahedronID> matches;
-  rtree->query(bgi::covers(location), boost::make_function_output_iterator([&](TetrahedronTraits::IndexType const &match) {
+  rtree->query(bgi::covers(eigenToRaw(location)), boost::make_function_output_iterator([&](TetrahedronTraits::IndexType const &match) {
                  matches.emplace_back(match.second);
                }));
   return matches;

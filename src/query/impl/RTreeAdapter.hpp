@@ -188,6 +188,12 @@ inline RTreeBox makeBox(const pm::Vertex::RawCoords &min, const pm::Vertex::RawC
   return {min, max};
 }
 
+/** Converts an Eigen vector to raw coordinates.
+ *
+ * Prefer raw coordinates when querying an rtree. Adapting an Eigen::VectorXd to
+ * boost.geometry requires a runtime dimension check on every coordinate access,
+ * which a single query repeats for every primitive it visits.
+ */
 inline pm::Vertex::RawCoords eigenToRaw(const Eigen::VectorXd &v)
 {
   const auto size = v.size();
