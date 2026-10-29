@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
   Participant precice(context.name, context.config(), 0, 1);
 
   // SolverOne prescribes these, thus SolverTwo expect these (we use "first-participant" as dt method)
-  std::vector<std::vector<double>> timestepSizes{{1.0, 1.0, 1.0}, {2.0, 2.0, 2.0}, {3.0, 3.0, 3.0}};
+  std::vector<std::vector<double>> timestepSizes{{1.0, 2.0, 1.0}, {2.0, 1.0, 2.0}, {3.0, 2.5, 3.0}};
 
   // max number of iterations in implicit coupling
   int maxIterations = 3;
