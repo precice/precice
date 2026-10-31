@@ -33,7 +33,7 @@ preCICE stands for Precise Code Interaction Coupling Environment. Its main compo
 If you are new to preCICE, please have a look at our [documentation](https://www.precice.org/docs.html) and at [precice.org](https://www.precice.org). You may also prefer to [get and install a binary package for the latest release](https://github.com/precice/precice/releases/latest) ([main branch](https://github.com/precice/precice/tree/main)).
 
 <div align="center" style="margin-bottom:30px">
-<img src="https://github.com/precice/precice.github.io/blob/master/material/overview/precice-overview.png" alt="preCICE overview" style="max-height: 100%; max-width: 100%">
+<img src="https://raw.githubusercontent.com/precice/precice.github.io/master/static/material/overview/precice-overview.png" alt="preCICE overview" style="max-height: 100%; max-width: 100%">
 </div>
 
 preCICE is an academic project, developed at the [Technical University of Munich](https://www.cs.cit.tum.de/en/sccs/home/) and at the [University of Stuttgart](https://www.ipvs.uni-stuttgart.de). If you use preCICE, please [cite us](https://www.precice.org/fundamentals-literature-guide.html).
