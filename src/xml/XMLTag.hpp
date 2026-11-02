@@ -176,6 +176,12 @@ public:
 
   int getIntAttributeValue(const std::string &name, std::optional<int> default_value = std::nullopt) const;
 
+  /// Returns the attribute value, or nullopt if the attribute was optional and not provided in the XML.
+  std::optional<int> getOptionalIntAttributeValue(const std::string &name) const;
+
+  /// Returns the attribute value, or nullopt if the attribute was optional and not provided in the XML.
+  std::optional<double> getOptionalDoubleAttributeValue(const std::string &name) const;
+
   std::string getStringAttributeValue(const std::string &name, std::optional<std::string> default_value = std::nullopt) const;
 
   bool getBooleanAttributeValue(const std::string &name, std::optional<bool> default_value = std::nullopt) const;
