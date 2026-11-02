@@ -1,15 +1,15 @@
 #pragma once
 
 #include "mapping/Mapping.hpp"
-#include "mapping/SharedPointer.hpp"
-#include "mapping/config/MappingConfiguration.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice::impl {
 
 /// Holds a data mapping and related information.
 struct MappingContext {
   /// Data mapping.
-  mapping::PtrMapping mapping;
+  mapping::Mapping *mapping = nullptr;
 
   /// id of mesh from which is mapped
   MeshID fromMeshID = -1;

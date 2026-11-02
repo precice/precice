@@ -103,10 +103,10 @@ using rbf_variant_t = std::variant<CompactPolynomialC0, CompactPolynomialC2, Com
 
 // The actual instantiation of the mapping class, which is called by the visitor \ref getRBFMapping
 template <RBFBackend T, typename RADIAL_BASIS_FUNCTION_T, typename... Args>
-PtrMapping instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int dimension, RADIAL_BASIS_FUNCTION_T function,
-                                 Args &&...args)
+std::unique_ptr<Mapping> instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int dimension, RADIAL_BASIS_FUNCTION_T function,
+                                               Args &&...args)
 {
-  return PtrMapping(new typename BackendSelector<T, RADIAL_BASIS_FUNCTION_T>::type(constraint, dimension, function, std::forward<Args>(args)...));
+  return std::make_unique<typename BackendSelector<T, RADIAL_BASIS_FUNCTION_T>::type>(constraint, dimension, function, std::forward<Args>(args)...);
 }
 
 // Constructs the RBF function based on the functionType
@@ -160,8 +160,8 @@ rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, dou
 // The first three arguments of the constructor are prescribed: constraint, dimension and the RBF function object, all other
 // constructor arguments are just forwarded. The first argument (BasisFunction) indicates then the actual instantiation to return.
 template <RBFBackend T, typename... Args>
-PtrMapping getRBFMapping(BasisFunction functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
-                         Args &&...args)
+std::unique_ptr<Mapping> getRBFMapping(BasisFunction functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
+                                       Args &&...args)
 {
   // First, construct the RBF function
   auto functionVariant = constructRBF(functionType, supportRadius, shapeParameter);
@@ -490,7 +490,7 @@ void MappingConfiguration::xmlTagCallback(
     _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
     checkDuplicates(configuredMapping);
-    _mappings.push_back(configuredMapping);
+    _mappings.push_back(std::move(configuredMapping));
   } else if (tag.getNamespace() == SUBTAG_BASIS_FUNCTION) {
 
     PRECICE_ASSERT(!_mappings.empty());
@@ -677,13 +677,13 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
   // Create all projection based mappings
   if (type == TYPE_NEAREST_NEIGHBOR) {
-    configuredMapping.mapping = PtrMapping(new NearestNeighborMapping(constraintValue, fromMesh->getDimensions()));
+    configuredMapping.mapping = std::make_unique<NearestNeighborMapping>(constraintValue, fromMesh->getDimensions());
   } else if (type == TYPE_NEAREST_PROJECTION) {
-    configuredMapping.mapping = PtrMapping(new NearestProjectionMapping(constraintValue, fromMesh->getDimensions()));
+    configuredMapping.mapping = std::make_unique<NearestProjectionMapping>(constraintValue, fromMesh->getDimensions());
   } else if (type == TYPE_LINEAR_CELL_INTERPOLATION) {
-    configuredMapping.mapping = PtrMapping(new LinearCellInterpolationMapping(constraintValue, fromMesh->getDimensions()));
+    configuredMapping.mapping = std::make_unique<LinearCellInterpolationMapping>(constraintValue, fromMesh->getDimensions());
   } else if (type == TYPE_COARSE_GRAINING) {
-    configuredMapping.mapping = PtrMapping(new CoarseGrainingMapping(constraintValue, fromMesh->getDimensions(), cgRadius));
+    configuredMapping.mapping = std::make_unique<CoarseGrainingMapping>(constraintValue, fromMesh->getDimensions(), cgRadius);
   } else if (type == TYPE_NEAREST_NEIGHBOR_GRADIENT) {
 
     // NNG is not applicable with the conservative constraint
@@ -691,7 +691,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
                   "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. "
                   "Please select constraint=\" consistent\" or a different mapping method.");
 
-    configuredMapping.mapping = PtrMapping(new NearestNeighborGradientMapping(constraintValue, fromMesh->getDimensions()));
+    configuredMapping.mapping = std::make_unique<NearestNeighborGradientMapping>(constraintValue, fromMesh->getDimensions());
 
   } else if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE) {
 
@@ -750,7 +750,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       PRECICE_UNREACHABLE("Unknown geometric cross section \"{}\".", geoMultiscaleCrossSection);
     }
 
-    configuredMapping.mapping = PtrMapping(new AxialGeoMultiscaleMapping(constraintValue, fromMesh->getDimensions(), multiscaleDimension, multiscaleType, multiscaleAxis, multiscaleRadius, multiscaleProfile, multiscaleCrossSection));
+    configuredMapping.mapping = std::make_unique<AxialGeoMultiscaleMapping>(constraintValue, fromMesh->getDimensions(), multiscaleDimension, multiscaleType, multiscaleAxis, multiscaleRadius, multiscaleProfile, multiscaleCrossSection);
 
   } else if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
 
@@ -780,7 +780,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       PRECICE_UNREACHABLE("Unknown geometric multiscale type \"{}\".", geoMultiscaleType);
     }
 
-    configuredMapping.mapping = PtrMapping(new RadialGeoMultiscaleMapping(constraintValue, fromMesh->getDimensions(), multiscaleType, multiscaleAxis));
+    configuredMapping.mapping = std::make_unique<RadialGeoMultiscaleMapping>(constraintValue, fromMesh->getDimensions(), multiscaleType, multiscaleAxis);
 
   } else {
     // We need knowledge about the basis function in order to instantiate the rbf related mapping
@@ -913,7 +913,12 @@ void MappingConfiguration::finishRBFConfiguration()
   }
 }
 
-const std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration::mappings()
+const std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration::mappings() const
+{
+  return _mappings;
+}
+
+std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration::mappings()
 {
   return _mappings;
 }
