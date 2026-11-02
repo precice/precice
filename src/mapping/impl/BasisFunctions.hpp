@@ -226,7 +226,7 @@ private:
 class Gaussian : public CompactSupportBase,
                  public DefiniteFunction<true> {
 public:
-  Gaussian(const double shape, const double supportRadius = std::numeric_limits<double>::infinity())
+  Gaussian(const double shape, const double supportRadius = std::numeric_limits<double>::infinity(), const double threshold = cutoffThreshold)
       : _shape(shape),
         _supportRadius(supportRadius)
   {
@@ -239,11 +239,11 @@ public:
           "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the \"support-radius\" attribute."};
     }
 
-    double threshold   = std::sqrt(-std::log(cutoffThreshold)) / shape;
-    _supportRadius     = std::min(supportRadius, threshold);
-    _params.parameter1 = _shape;
-    _params.parameter2 = _supportRadius;
-    _params.parameter3 = _deltaY;
+    double cutoffRadius = std::sqrt(-std::log(threshold)) / shape;
+    _supportRadius      = std::min(supportRadius, cutoffRadius);
+    _params.parameter1  = _shape;
+    _params.parameter2  = _supportRadius;
+    _params.parameter3  = _deltaY;
     if (supportRadius < std::numeric_limits<double>::infinity()) {
       _deltaY            = evaluate(supportRadius);
       _params.parameter3 = _deltaY;
