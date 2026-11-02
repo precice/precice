@@ -278,6 +278,11 @@ private:
   void checkIfDataIsExchanged(
       DataID dataID, std::string_view participant) const;
 
+  /// Checks that data used in convergence measures is either exchanged
+  /// or written by the convergence-checking participant on a provided mesh.
+  void checkConvergenceMeasureDataAvailable(
+      DataID dataID, std::string_view participant, const std::string &dataName, const std::string &meshName) const;
+
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;
 
