@@ -493,6 +493,7 @@ target_sources(testprecice
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingThird.cpp
     tests/serial/time/implicit/parallel-coupling/WaveformSubcyclingWithDifferentNumberOfDts.cpp
+    tests/serial/time/implicit/serial-coupling/DirtyTimestep.cpp
     tests/serial/time/implicit/serial-coupling/DoNothingWithSmallStepsNoSubsteps.cpp
     tests/serial/time/implicit/serial-coupling/DoNothingWithSmallStepsSubsteps.cpp
     tests/serial/time/implicit/serial-coupling/InitialDataAitken1.cpp
