@@ -117,6 +117,48 @@ BOOST_AUTO_TEST_CASE(Query3DVertex)
 }
 
 PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(Query2DRawCoordinates)
+{
+  PRECICE_TEST();
+  auto                    mesh = edgeMesh2D();
+  Index                   indexTree(mesh);
+  Eigen::Vector2d         eigenLocation(0.1, 0.7);
+  mesh::Vertex::RawCoords rawLocation{0.1, 0.7, 0.0};
+
+  auto rawMatch = indexTree.getClosestVertex(rawLocation);
+  BOOST_TEST(rawMatch.index == 1);
+  BOOST_TEST(indexTree.getClosestVertex(eigenLocation).index == rawMatch.index);
+
+  std::vector<VertexID> expected{0, 1};
+  auto                  rawMatches   = indexTree.getClosestVertices(rawLocation, 2);
+  auto                  eigenMatches = indexTree.getClosestVertices(eigenLocation, 2);
+  BOOST_TEST(rawMatches.size() == expected.size());
+  BOOST_TEST(std::is_permutation(rawMatches.begin(), rawMatches.end(), expected.begin(), expected.end()));
+  BOOST_TEST(std::is_permutation(eigenMatches.begin(), eigenMatches.end(), expected.begin(), expected.end()));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(Query3DRawCoordinates)
+{
+  PRECICE_TEST();
+  auto                    mesh = edgeMesh3D();
+  Index                   indexTree(mesh);
+  Eigen::Vector3d         eigenLocation(0.8, 0.1, 0.9);
+  mesh::Vertex::RawCoords rawLocation{0.8, 0.1, 0.9};
+
+  auto rawMatch = indexTree.getClosestVertex(rawLocation);
+  BOOST_TEST(rawMatch.index == 5);
+  BOOST_TEST(indexTree.getClosestVertex(eigenLocation).index == rawMatch.index);
+
+  std::vector<VertexID> expected{1, 5};
+  auto                  rawMatches   = indexTree.getClosestVertices(rawLocation, 2);
+  auto                  eigenMatches = indexTree.getClosestVertices(eigenLocation, 2);
+  BOOST_TEST(rawMatches.size() == expected.size());
+  BOOST_TEST(std::is_permutation(rawMatches.begin(), rawMatches.end(), expected.begin(), expected.end()));
+  BOOST_TEST(std::is_permutation(eigenMatches.begin(), eigenMatches.end(), expected.begin(), expected.end()));
+}
+
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Query3DFullVertex)
 {
   PRECICE_TEST();
