@@ -304,7 +304,7 @@ public:
     return _communicationMap;
   }
 
-  void addMesh(Mesh &deltaMesh);
+  void addMesh(const Mesh &deltaMesh);
 
   /**
    * @brief Returns the bounding box of the mesh.

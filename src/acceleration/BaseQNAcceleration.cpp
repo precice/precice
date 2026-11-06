@@ -274,7 +274,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   _residuals = _values;
   _residuals -= _oldValues;
 
-  PRECICE_WARN_IF(math::equals(utils::IntraComm::l2norm(_primaryResiduals), 0.0),
+  PRECICE_WARN_IF(math::isZero(utils::IntraComm::l2norm(_primaryResiduals)),
                   "The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
                   "Maybe you always write the same data or you call advance without "
                   "providing new data first or you do not use available read data. "
@@ -305,11 +305,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
       double residualMagnitude = utils::IntraComm::l2norm(deltaR);
 
-      if (not math::equals(utils::IntraComm::l2norm(_primaryValues), 0.0)) {
+      if (not math::isZero(utils::IntraComm::l2norm(_primaryValues))) {
         residualMagnitude /= utils::IntraComm::l2norm(_primaryValues);
       }
       PRECICE_WARN_IF(
-          math::equals(residualMagnitude, 0.0),
+          math::isZero(residualMagnitude),
           "Adding a vector with a two-norm of {} to the quasi-Newton V matrix, which will lead to "
           "ill-conditioning. A filter might delete the column again. Still, this could mean that you are "
           "converging too tightly, that you reached steady-state, or that you are giving by mistake identical "

@@ -51,6 +51,8 @@ public:
 
   bool isTagged() const;
 
+  void setTagged(bool tagged);
+
   void tag();
 
   /// Returns a coordinate of a vertex

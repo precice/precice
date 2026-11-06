@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.5.0
+
+- Added guidelines for contributing with GenAI agents in `CONTRIBUTING.md`. (https://github.com/precice/precice/pull/2589)
+- Added option to export only a single mesh using `<export:X mesh="Name" />`. Not specifying a mesh will export all meshes known to the participant. (https://github.com/precice/precice/pull/2462)
+- Added support for conservative PU-RBF mappings via Kokkos (CUDA, HIP, SYCL, OpenMP). (https://github.com/precice/precice/pull/2536)
+- Changed the baseline from Ubuntu 22.04 LTS to Ubuntu 24.04 LTS, which lifts minimum required versions of dependencies to: CMake 3.28.3, GCC/stdlibc++ 13.2.0, Eigen 3.4.0 (remains), Boost 1.83.0, PETSc 3.19, Python 3.12.3, and Numpy 1.26.4. (https://github.com/precice/precice/pull/2564)
+- Fixed the libxml2 dependency specification in the Debian package for Ubuntu 25.10 and newer. (https://github.com/precice/precice/pull/2560)
+- Fixed CMake linking `libprecice` instead of the test binary against the Boost unit test framework. (https://github.com/precice/precice/pull/2597)
+- Fixed CMake requiring Boost unit test framework even when tests are disabled. (https://github.com/precice/precice/pull/2597)
+- Fixed Debian package file permissions. (https://github.com/precice/precice/pull/2563)
+- Improved mesh filtering, merging speeds and memory consumption. (https://github.com/precice/precice/pull/2591)
+- Improved timestamp comparison for large absolute values. (https://github.com/precice/precice/pull/2601)
+- Removed broken support of using static Boost due to incompatibility with Boost.Log. CMake will raise an error when `Boost_USE_STATIC_LIBS` is enabled. (https://github.com/precice/precice/pull/2597)
+
 ## 3.4.1
 
 - Fixed `std::optional` usage in Kokkos kernel implementations. (https://github.com/precice/precice/pull/2551)

@@ -8,6 +8,7 @@
 #include <limits>
 #include <regex>
 #include <string>
+#include <unordered_set>
 
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
@@ -137,6 +138,40 @@ boost::test_tools::predicate_result equals(double a, double b, double tolerance)
 void expectFile(std::string_view name)
 {
   BOOST_TEST(std::filesystem::is_regular_file(name), "File " << name << " is not a regular file or doesn't exist.");
+}
+
+void expectDirectoryContent(std::string_view dir, std::vector<std::string> filenames)
+{
+  bool dirExists = std::filesystem::is_directory(dir);
+  BOOST_TEST(dirExists, "Directory " << dir << " doesn't exist.");
+  if (dirExists) {
+    std::unordered_set<std::string> actual;
+    for (const auto &entry : std::filesystem::directory_iterator(dir)) {
+      if (entry.is_regular_file()) {
+        actual.insert(entry.path().filename().string());
+      }
+    }
+
+    std::unordered_set<std::string> expected(filenames.begin(), filenames.end());
+
+    for (const auto &file : expected) {
+      BOOST_TEST(actual.count(file) > 0, "Missing file: " << file);
+    }
+
+    for (const auto &file : actual) {
+      BOOST_TEST(expected.count(file) > 0, "Unexpected file: " << file);
+    }
+  }
+}
+
+void expectNoDirectory(std::string_view dir)
+{
+  BOOST_TEST(!std::filesystem::is_directory(dir), "Directory " << dir << " shouldn't exist.");
+}
+
+void removeDirectory(std::string_view name)
+{
+  std::filesystem::remove_all(name);
 }
 
 ErrorPredicate errorContains(std::string_view substring)

@@ -24,7 +24,6 @@
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "io/Export.hpp"
 #include "io/ExportContext.hpp"
-#include "io/SharedPointer.hpp"
 #include "logging/LogConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/BoundM2N.hpp"
@@ -412,7 +411,7 @@ void ParticipantImpl::advance(
 
   // validating computed time step
   PRECICE_CHECK(std::isfinite(computedTimeStepSize), "advance() cannot be called with an infinite time step size.");
-  PRECICE_CHECK(!math::equals(computedTimeStepSize, 0.0), "advance() cannot be called with a time step size of 0.");
+  PRECICE_CHECK(!math::isZero(computedTimeStepSize), "advance() cannot be called with a time step size of 0.");
   PRECICE_CHECK(computedTimeStepSize > 0.0, "advance() cannot be called with a negative time step size {}.", computedTimeStepSize);
 
   _numberAdvanceCalls++;
@@ -429,11 +428,13 @@ void ParticipantImpl::advance(
 
   if (_allowsRemeshing) {
     if (isAtWindowEnd) {
-      auto totalMeshChanges = getTotalMeshChanges();
+      Event e("reinitSync", profiling::Fundamental, profiling::Synchronize);
+      auto  totalMeshChanges = getTotalMeshChanges();
       clearStamplesOfChangedMeshes(totalMeshChanges);
 
       int sumOfChanges = std::accumulate(totalMeshChanges.begin(), totalMeshChanges.end(), 0);
       if (reinitHandshake(sumOfChanges)) {
+        e.stop();
         reinitialize();
       }
     } else {
@@ -672,7 +673,7 @@ double ParticipantImpl::getMaxTimeStepSize() const
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   const double nextTimeStepSize = _couplingScheme->getNextTimeStepMaxSize();
-  // PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
+  // PRECICE_ASSERT(!math::isZero(nextTimeStepSize), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
   // PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
 
   // safeguard needed because _couplingScheme->getNextTimeStepMaxSize() returns 0, if not isCouplingOngoing()
@@ -1215,7 +1216,7 @@ void ParticipantImpl::readData(
   PRECICE_CHECK(_state != State::Finalized, "readData(...) cannot be called after finalize().");
   PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readData(...) cannot sample data before the current time.");
-  PRECICE_CHECK(isCouplingOngoing() || math::equals(relativeReadTime, 0.0), "Calling readData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
+  PRECICE_CHECK(isCouplingOngoing() || math::isZero(relativeReadTime), "Calling readData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
 
@@ -1267,7 +1268,7 @@ void ParticipantImpl::mapAndReadData(
   PRECICE_CHECK(_state != State::Finalized, "mapAndReadData(...) cannot be called after finalize().");
   PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "mapAndReadData(...) cannot sample data before the current time.");
-  PRECICE_CHECK(isCouplingOngoing() || math::equals(relativeReadTime, 0.0), "Calling mapAndReadData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
+  PRECICE_CHECK(isCouplingOngoing() || math::isZero(relativeReadTime), "Calling mapAndReadData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
   PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());
@@ -1890,7 +1891,7 @@ ParticipantImpl::MeshChanges ParticipantImpl::getTotalMeshChanges() const
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_allowsRemeshing);
-  Event e("remesh.exchangeLocalMeshChanges", profiling::Synchronize);
+  Event e("gatherLocalMeshChanges", profiling::Synchronize);
 
   // Gather local changes
   std::vector<double> localMeshChanges;
@@ -1925,12 +1926,13 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_allowsRemeshing);
-  Event e("remesh.exchangeRemoteMeshChanges", profiling::Synchronize);
 
+  bool swarmReinitRequired = false;
   if (not utils::IntraComm::isSecondary()) {
+    Event e("exchangeRemoteMeshChanges", profiling::Synchronize);
     PRECICE_DEBUG("Remeshing is{} required by this participant.", (requestReinit ? "" : " not"));
 
-    bool swarmReinitRequired = requestReinit;
+    swarmReinitRequired = requestReinit;
     for (auto &iter : _m2ns) {
       PRECICE_DEBUG("Coordinating remeshing with {}", iter.first);
       bool  received = false;
@@ -1945,14 +1947,11 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
       swarmReinitRequired |= received;
     }
     PRECICE_DEBUG("Coordinated that overall{} remeshing is required.", (swarmReinitRequired ? "" : " no"));
-
-    utils::IntraComm::broadcast(swarmReinitRequired);
-    return swarmReinitRequired;
-  } else {
-    bool swarmReinitRequired = false;
-    utils::IntraComm::broadcast(swarmReinitRequired);
-    return swarmReinitRequired;
   }
+
+  Event e("broadcastLocalMeshChanges", profiling::Synchronize);
+  utils::IntraComm::broadcast(swarmReinitRequired);
+  return swarmReinitRequired;
 }
 
 void ParticipantImpl::startProfilingSection(std::string_view sectionName)

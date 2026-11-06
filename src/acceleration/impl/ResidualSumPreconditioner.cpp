@@ -47,7 +47,7 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
   }
   sum = std::sqrt(sum);
   PRECICE_WARN_IF(
-      math::equals(sum, 0.0),
+      math::isZero(sum),
       "All residual sub-vectors in the residual-sum preconditioner are numerically zero ( sum = {}). "
       "This indicates that the data values exchanged between two successive iterations did not change. "
       "The simulation may be unstable, e.g. produces NAN values. Please check the data values exchanged "
@@ -60,7 +60,7 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
       _residualSum[k] += norms[k] / sum;
 
     PRECICE_WARN_IF(
-        math::equals(_residualSum[k], 0.0),
+        math::isZero(_residualSum[k]),
         "The sub-vector of data \"{}\" in the residual-sum preconditioner became numerically zero ( sub-vector = {}). "
         "If this occurred in the second iteration and the initial-relaxation factor is equal to 1.0, "
         "check if the coupling data values of one solver is zero in the first iteration. "
@@ -75,7 +75,7 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
   if (!resetWeights) {
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       double resSum = _residualSum[k];
-      if (math::equals(resSum, 0.0)) {
+      if (math::isZero(resSum)) {
         continue; // These will be ignored when resetting the weights
       }
       // Check if the ratio of the new scaling weight to the previous residual sum
@@ -97,7 +97,7 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
   // Reset the weights for non-zero residual sums
   for (size_t k = 0; k < _subVectorSizes.size(); k++) {
     double resSum = _residualSum[k];
-    if (not math::equals(resSum, 0.0)) {
+    if (not math::isZero(resSum)) {
       auto offset = _subVectorOffsets[k];
       for (size_t i = 0; i < _subVectorSizes[k]; i++) {
         _weights[i + offset]    = 1 / resSum;

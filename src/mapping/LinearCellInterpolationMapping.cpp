@@ -85,7 +85,7 @@ void LinearCellInterpolationMapping::computeMapping()
     auto match    = index.findCellOrProjection(fVertex.getCoords(), nnearest);
     auto distance = match.polation.distance();
     addPolation(fVertex.getID(), match.polation);
-    if (!math::equals(distance, 0.0)) {
+    if (!math::isZero(distance)) {
       // Only push when fall-back occurs, so the number of entries is the number of vertices outside the domain
       fallbackStatistics(distance);
     }

@@ -112,6 +112,11 @@ void RadialGeoMultiscaleMapping::computeMapping()
         counters[index] += 1;
       }
       _vertexCounter = std::move(counters);
+      for (size_t i = 0; i < outSize; ++i) {
+        PRECICE_CHECK(_vertexCounter[i] > 0,
+                      "Radial geometric multiscale mapping failed: output vertex {} has no contributing input vertices.",
+                      i);
+      }
     }
 
   } else {
