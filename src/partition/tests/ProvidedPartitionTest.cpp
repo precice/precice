@@ -1,3 +1,8 @@
+#include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "partition/ProvidedPartition.hpp"
+#include "testing/Testing.hpp"
+
 #ifndef PRECICE_NO_MPI
 #include <Eigen/Core>
 #include <algorithm>
@@ -17,13 +22,9 @@
 #include "math/constants.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "partition/Partition.hpp"
-#include "partition/ProvidedPartition.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "testing/TestContext.hpp"
-#include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::mesh {
@@ -31,13 +32,29 @@ class Edge;
 class Vertex;
 } // namespace precice::mesh
 
-using precice::partition::ProvidedPartition;
 using precice::partition::ReceivedPartition;
 using precice::testing::TestContext;
+#endif // not PRECICE_NO_MPI
+
+using precice::partition::ProvidedPartition;
 
 BOOST_AUTO_TEST_SUITE(PartitionTests)
 BOOST_AUTO_TEST_SUITE(ProvidedPartitionTests)
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(EmptyProvidedMeshThrows)
+{
+  using namespace precice;
+  PRECICE_TEST();
+  int           dimensions = 2;
+  mesh::PtrMesh pMesh(new mesh::Mesh("EmptyMesh", dimensions, testing::nextMeshID()));
+  ProvidedPartition partition(pMesh);
+  BOOST_CHECK_EXCEPTION(partition.communicate(),
+                        ::precice::Error,
+                        ::precice::testing::errorContains("The provided mesh \"EmptyMesh\" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize()."));
+}
+
+#ifndef PRECICE_NO_MPI
 PRECICE_TEST_SETUP("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 {
@@ -864,7 +881,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
-
 #endif // PRECICE_NO_MPI
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
