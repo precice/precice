@@ -181,7 +181,7 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name) 
   PRECICE_UNREACHABLE("The XMLAttribute doesn't exist, check its default.");
 }
 
-void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttributes)
+void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttributes, const std::string_view fullXMLCtx)
 {
   PRECICE_TRACE();
 
@@ -212,7 +212,7 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
   // Read all attributes
   for (auto &attribute : _attributes) {
     std::visit(
-        [this, &aAttributes](auto &attribute) { attribute.readValue(_fullName, aAttributes); },
+        [&aAttributes, fullXMLCtx](auto &attribute) { attribute.readValue(aAttributes, fullXMLCtx); },
         attribute);
   }
 }

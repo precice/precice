@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(MissingRequiredAttributeIncludesTagName)
   BOOST_CHECK_EXCEPTION(
       configure(rootTag, ConfigurationContext{}, filename),
       ::precice::Error,
-      ::precice::testing::errorContains("The tag <test-missing-attr> in the configuration is missing required attribute \"required-attr\"."));
+      ::precice::testing::errorContains("Missing required attribute \"required-attr\" in <test-missing-attr> inside <configuration>"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
