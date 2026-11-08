@@ -46,8 +46,8 @@ BOOST_AUTO_TEST_CASE(EmptyProvidedMeshThrows)
 {
   using namespace precice;
   PRECICE_TEST();
-  int           dimensions = 2;
-  mesh::PtrMesh pMesh(new mesh::Mesh("EmptyMesh", dimensions, testing::nextMeshID()));
+  int               dimensions = 2;
+  mesh::PtrMesh     pMesh(new mesh::Mesh("EmptyMesh", dimensions, testing::nextMeshID()));
   ProvidedPartition partition(pMesh);
   BOOST_CHECK_EXCEPTION(partition.communicate(),
                         ::precice::Error,
