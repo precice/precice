@@ -299,6 +299,7 @@ void ParticipantImpl::initialize()
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());
   _solverAdvanceEvent = std::make_unique<profiling::Event>("solver.advance", profiling::Fundamental, profiling::Synchronize);
+  _solverImbalance->startSolver();
 }
 
 void ParticipantImpl::reinitialize()

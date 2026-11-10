@@ -21,9 +21,7 @@ void SolverImbalance::startSolver()
 
 void SolverImbalance::stopSolver(double solverTimeStepSize)
 {
-  if (_state == State::STOPPED) { // first time step
-    return;
-  }
+  PRECICE_ASSERT(_state == State::RUNNING);
   _state             = State::STOPPED;
   auto   currentTime = Clock::now();
   double advanceTime = (currentTime - _startTime).count() * 1e-9;
