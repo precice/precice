@@ -56,7 +56,7 @@ void subcyclingWithNSteps(TestContext const &context, int nSubsteps, bool useAdv
       // Advanced strategy for determining time step size considers round of errors
       double tol = 10 * math::NUMERICAL_ZERO_DIFFERENCE;
 
-      if (abs(preciceDt - solverDt) < tol) {
+      if (std::abs(preciceDt - solverDt) < tol) {
         currentDt = preciceDt;
       } else {
         currentDt = solverDt > preciceDt ? preciceDt : solverDt;

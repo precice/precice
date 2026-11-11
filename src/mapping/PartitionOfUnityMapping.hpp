@@ -352,7 +352,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const tim
   PRECICE_ASSERT(outData.isZero());
 
   if (_useBatchedSolver) {
-    PRECICE_ASSERT(false, "Not implemented");
+    PRECICE_ASSERT(_batchedSolver, "Not initialized");
+    _batchedSolver->solveConservative(inData, outData);
   } else {
     // 2. Iterate over all clusters and accumulate the result in the output data
     std::for_each(_clusters.begin(), _clusters.end(), [&](auto &cluster) { cluster.mapConservative(inData, outData); });

@@ -172,7 +172,7 @@ bool collinear(
   PRECICE_ASSERT(a.size() == b.size(), a.size(), b.size());
   PRECICE_ASSERT(a.size() == c.size(), a.size(), c.size());
   double triangleOutline = (b - a).norm() + (c - b).norm() + (a - c).norm();
-  if (math::equals(triangleArea(a, b, c) / triangleOutline, 0.0)) {
+  if (math::isZero(triangleArea(a, b, c) / triangleOutline)) {
     return true;
   }
   return false;
@@ -185,7 +185,7 @@ bool parallel(
     const Eigen::MatrixBase<Derived> &c,
     const Eigen::MatrixBase<Derived> &d)
 {
-  if (math::equals(triangleArea(a, b, c), 0.0) and math::equals(triangleArea(a, b, d), 0.0))
+  if (math::isZero(triangleArea(a, b, c)) and math::isZero(triangleArea(a, b, d)))
     return true;
 
   return false;
@@ -208,7 +208,7 @@ int containedInHyperrectangle(
     if (math::greater(0.0, diff)) {
       return NOT_CONTAINED;
     }
-    if (math::equals(diff, 0.0)) {
+    if (math::isZero(diff)) {
       touching = true;
     }
   }

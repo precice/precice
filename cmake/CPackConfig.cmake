@@ -61,7 +61,7 @@ set(CPACK_SOURCE_IGNORE_FILES
 
 # Build dependency set
 unset(CPACK_DEBIAN_PACKAGE_DEPENDS)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2-dev")
 if(PRECICE_FEATURE_PYTHON_ACTIONS)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, python3-dev, python3-numpy")
 endif()
@@ -94,6 +94,13 @@ set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
 set(CPACK_DEBIAN_PACKAGE_PROVIDES precice)
 set(CPACK_DEBIAN_PACKAGE_CONFLICTS "precice, libprecice2")
 set(CPACK_DEBIAN_PACKAGE_REPLACES precice)
+
+# Fix package permissions
+set(CPACK_DEBIAN_PACKAGE_CONTROL_STRICT_PERMISSION TRUE)
+set(CPACK_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE)
 
 # Install doc files
 install(FILES tools/releasing/packaging/debian/copyright

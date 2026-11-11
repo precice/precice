@@ -9,6 +9,7 @@ target_sources(precice-bench
     benchmarks/main.cpp
     benchmarks/mesh-index.cpp
     benchmarks/mesh-tagging.cpp
+    benchmarks/profiling.cpp
     benchmarks/rbf-assembly-kernels.cpp
     benchmarks/write-data.cpp
     )
