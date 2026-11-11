@@ -106,4 +106,17 @@ std::vector<StringMatch> computeMatches(std::string_view given, const Container 
 
 bool isKebabStyle(std::string_view sv);
 
+/**
+ * @brief Appends a source location and a source line snippet to a message.
+ *
+ * Used to annotate configuration error messages with where in the file they occurred.
+ * If line is not positive, no location is known and the message is returned unchanged.
+ *
+ * @param[in] message the message to annotate
+ * @param[in] line 1-based line number, or -1 if unknown
+ * @param[in] column 1-based column number, or -1 if unknown
+ * @param[in] sourceLine the text of that source line, used to display a snippet; may be empty
+ */
+std::string appendLocation(std::string_view message, int line, int column, std::string_view sourceLine);
+
 } // namespace precice::utils
