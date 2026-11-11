@@ -1,6 +1,7 @@
 #ifndef PRECICE_NO_MPI
 
 #include "helpers.hpp"
+#include <cmath>
 #include "testing/Testing.hpp"
 
 #include <fstream>
