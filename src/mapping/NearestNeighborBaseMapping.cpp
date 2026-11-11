@@ -59,14 +59,13 @@ void NearestNeighborBaseMapping::computeMapping()
 
   auto &index = searchSpace->index();
   for (size_t i = 0; i < verticesSize; ++i) {
-    const auto &sourceCoords  = sourceVertices[i].getCoords();
-    const auto  matchedVertex = index.getClosestVertex(sourceCoords);
-    _vertexIndices[i]         = matchedVertex.index;
+    const auto sourceCoords  = sourceVertices[i].rawCoords();
+    const auto matchedVertex = index.getClosestVertex(sourceCoords);
+    _vertexIndices[i]        = matchedVertex.index;
 
     // Compute distance between input and output vertiex for the stats
-    const auto &matchCoords = searchSpace->vertex(matchedVertex.index).getCoords();
-    auto        distance    = (sourceCoords - matchCoords).norm();
-    distanceStatistics(distance);
+    const auto matchCoords = searchSpace->vertex(matchedVertex.index).rawCoords();
+    distanceStatistics(mesh::norm(sourceCoords, matchCoords));
   }
 
   // For gradient mapping, the calculation of offsets between source and matched vertex necessary
