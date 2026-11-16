@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.28.3)
-project(preCICE VERSION 3.4.1 LANGUAGES CXX)
+project(preCICE VERSION 3.5.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
