@@ -164,6 +164,34 @@ void Parallel::resetManagedMPI()
   _initState               = Parallel::InitializationState::Uninitialized;
 }
 
+std::optional<int> Parallel::detectMPMDAppNumber()
+{
+#if defined(MPI_APPNUM)
+  int *appNumber = nullptr;
+  int  hasAppNumber{0};
+  MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_APPNUM, &appNumber, &hasAppNumber);
+
+  int allHaveAppNumber{0};
+  MPI_Allreduce(&hasAppNumber, &allHaveAppNumber, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+  if (allHaveAppNumber == 0 || appNumber == nullptr) {
+    return std::nullopt;
+  }
+
+  const int localAppNumber = *appNumber;
+  int       minimumAppNumber{0};
+  int       maximumAppNumber{0};
+  MPI_Allreduce(&localAppNumber, &minimumAppNumber, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce(&localAppNumber, &maximumAppNumber, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+
+  if (minimumAppNumber == maximumAppNumber) {
+    return std::nullopt;
+  }
+  return localAppNumber;
+#else
+  return std::nullopt;
+#endif
+}
+
 void Parallel::pushState(CommStatePtr newState)
 {
   PRECICE_TRACE();
@@ -215,9 +243,14 @@ void Parallel::initializeOrDetectMPI(std::optional<Communicator> userProvided)
   // preCICE is constructed in testing mode
   if (_currentState == nullptr) {
     // User initialized MPI but didn't pass a communicator
-    // We need to use MPI_COMM_WORLD
+    // We need to use MPI_COMM_WORLD. If the launcher provided MPI_APPNUM,
+    // use it to create the communicator belonging to this MPMD application.
     _currentState = CommState::world();
     _initState    = InitializationState::Unmanaged;
+    if (const auto appNumber = detectMPMDAppNumber()) {
+      splitCommunicator(*appNumber);
+      PRECICE_INFO("Detected MPMD launch; using MPI application communicator {}", *appNumber);
+    }
     return;
   }
 

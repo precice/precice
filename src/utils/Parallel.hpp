@@ -219,6 +219,9 @@ private:
 
   static CommStatePtr _currentState;
 
+  /// Detects an MPI MPMD launch and returns the local application's app number.
+  static std::optional<int> detectMPMDAppNumber();
+
   /// Flag to safeguard against reinitializing MPI, which is forbidden
   static bool _mpiInitializedByPrecice;
 
