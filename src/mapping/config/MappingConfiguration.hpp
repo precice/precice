@@ -96,6 +96,7 @@ public:
     BasisFunction       basisFunction{};
     double              supportRadius{};
     double              shapeParameter{};
+    double              cutoffThreshold{1e-9};
     bool                basisFunctionDefined = false;
   };
 
@@ -193,8 +194,9 @@ private:
   const std::string RBF_CPOLYNOMIAL_C8    = "compact-polynomial-c8";
 
   // Attributes for the subtag
-  const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
-  const std::string ATTR_SUPPORT_RADIUS = "support-radius";
+  const std::string ATTR_SHAPE_PARAM      = "shape-parameter";
+  const std::string ATTR_SUPPORT_RADIUS   = "support-radius";
+  const std::string ATTR_CUTOFF_THRESHOLD = "cutoff-threshold";
 
   // Attributes for geometric multiscale
   const std::string ATTR_GEOMETRIC_MULTISCALE_DIMENSION                  = "multiscale-dimension";
