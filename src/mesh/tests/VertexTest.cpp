@@ -55,5 +55,23 @@ BOOST_AUTO_TEST_CASE(VertexWKTPrint)
   BOOST_TEST(v2str == v2stream.str());
 }
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(RawCoordsNorm)
+{
+  PRECICE_TEST();
+  using namespace mesh;
+  // 2D vertices are padded with zeros, so the third component cancels
+  Vertex a2(Eigen::Vector2d(1., 2.), 0);
+  Vertex b2(Eigen::Vector2d(4., 6.), 1);
+  BOOST_TEST(norm(a2.rawCoords(), b2.rawCoords()) == 5.0);
+  BOOST_TEST(norm(a2.rawCoords(), b2.rawCoords()) == (a2.getCoords() - b2.getCoords()).norm());
+
+  Vertex a3(Eigen::Vector3d(1., -2., 3.), 0);
+  Vertex b3(Eigen::Vector3d(-0.5, 4., 0.25), 1);
+  BOOST_TEST(norm(a3.rawCoords(), b3.rawCoords()) == (a3.getCoords() - b3.getCoords()).norm(), boost::test_tools::tolerance(1e-14));
+  BOOST_TEST(norm(a3.rawCoords(), b3.rawCoords()) == norm(b3.rawCoords(), a3.rawCoords()));
+  BOOST_TEST(norm(a3.rawCoords(), a3.rawCoords()) == 0.0);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Vertex
 BOOST_AUTO_TEST_SUITE_END() // Mesh
