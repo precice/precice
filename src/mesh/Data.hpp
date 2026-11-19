@@ -55,6 +55,20 @@ public:
       int         spatialDimensions = -1,
       int         waveformDegree    = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
+  /**
+   * @brief Constructor with data bounds
+   */
+  Data(
+      std::string name,
+      DataID      id,
+      int         dimension,
+      int         spatialDimensions,
+      int         waveformDegree,
+      std::vector<std::optional<double>>
+          lowerBound,
+      std::vector<std::optional<double>>
+          upperBound);
+
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
 
@@ -84,6 +98,10 @@ public:
 
   /// Returns a reference to the waveform
   time::Waveform &waveform();
+
+  std::vector<std::optional<double>> getLowerBound() const;
+
+  std::vector<std::optional<double>> getUpperBound() const;
 
   void moveToNextWindow();
 
@@ -141,6 +159,12 @@ private:
 
   /// Sample storage of this Data.
   time::Waveform _waveform;
+
+  /// Lower bound for data values. This vector with optional elements has size of the data dimension. The elements only have values if the user has configured relevant attributes.
+  std::vector<std::optional<double>> _lowerBound;
+
+  /// Upper bound for data values. This vector with optional elements has size of the data dimension. The elements only have values if the user has configured relevant attributes.
+  std::vector<std::optional<double>> _upperBound;
 
   /// Name of the data set.
   std::string _name;

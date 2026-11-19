@@ -1,4 +1,5 @@
 #include "ExportConfiguration.hpp"
+#include <utility>
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
@@ -32,6 +33,9 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
 
+  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH, "")
+                      .setDocumentation("Name of the mesh to export, or empty to export all meshes of the participant.");
+
   auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, ".")
                           .setDocumentation("Directory to export the files to.");
 
@@ -45,6 +49,7 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
                               .setDocumentation("Update the series file after every export instead of at the end of the simulation.");
 
   for (XMLTag &tag : tags) {
+    tag.addAttribute(attrMesh);
     tag.addAttribute(attrLocation);
     tag.addAttribute(attrEveryNTimeWindows);
     tag.addAttribute(attrEveryIteration);
@@ -58,13 +63,14 @@ void ExportConfiguration::xmlTagCallback(
     xml::XMLTag                     &tag)
 {
   if (tag.getNamespace() == TAG) {
-    ExportContext econtext;
-    econtext.location          = tag.getStringAttributeValue(ATTR_LOCATION);
-    econtext.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
-    econtext.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
-    econtext.updateSeries      = tag.getBooleanAttributeValue(ATTR_UPDATE_SERIES);
-    econtext.type              = tag.getName();
-    _contexts.push_back(econtext);
+    ConfiguredExport config;
+    config.configuredMeshName = tag.getStringAttributeValue(ATTR_MESH);
+    config.everyIteration     = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
+    config.everyNTimeWindows  = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
+    config.location           = tag.getStringAttributeValue(ATTR_LOCATION);
+    config.type               = tag.getName();
+    config.updateSeries       = tag.getBooleanAttributeValue(ATTR_UPDATE_SERIES);
+    _contexts.push_back(std::move(config));
   }
 }
 

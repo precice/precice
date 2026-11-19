@@ -13,3 +13,11 @@ precice_test_config_valid(unidirectional.xml Fluid 1)
 precice_test_config_invalid(unidirectional.xml "only the mapping combinations read-consistent and write-conservative" Fluid 2)
 precice_test_config_valid(unidirectional.xml Transport 1)
 precice_test_config_valid(unidirectional.xml Transport 2)
+
+precice_test_config_invalid(no-termination-condition.xml "At least one termination condition is required")
+
+precice_test_config_valid(exporter-all.xml)
+precice_test_config_valid(exporter-empty.xml)
+precice_test_config_valid(exporter-provided.xml)
+precice_test_config_valid(exporter-received.xml)
+precice_test_config_invalid(exporter-unavailable.xml "is not known to this participant")

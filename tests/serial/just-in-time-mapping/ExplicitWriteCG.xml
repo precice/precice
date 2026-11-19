@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="true">
+  <data:scalar name="Temperature" />
+  <data:vector name="Velocity" />
+
+  <mesh name="MeshOne" dimensions="3">
+    <use-data name="Temperature" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <mesh name="MeshTwo" dimensions="3">
+    <use-data name="Velocity" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <receive-mesh name="MeshTwo" from="SolverTwo" api-access="true" />
+    <write-data name="Velocity" mesh="MeshTwo" />
+    <!-- just-in-time variants -->
+    <mapping:coarse-graining
+      direction="write"
+      to="MeshTwo"
+      constraint="conservative"
+      radius="0.2" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <provide-mesh name="MeshTwo" />
+    <read-data name="Velocity" mesh="MeshTwo" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="2" />
+    <time-window-size value="1.0" />
+    <exchange data="Velocity" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

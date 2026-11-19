@@ -71,6 +71,7 @@ public:
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
+      OnBoundViolation        onBoundViolation,
       impl::PtrPreconditioner preconditioner,
       bool                    reducedTimeGrid);
 
@@ -106,7 +107,26 @@ public:
    * Has to be called after every implicit coupling iteration.
    */
   void performAcceleration(DataMap &cplData, double windowStart, double windowEnd) final override;
-
+  /**
+   * @brief Check bound violations caused by performing QN update.
+   */
+  std::vector<DataID> checkBoundViolation(Eigen::VectorXd &data, DataMap &cplData) const;
+  /**
+   * @brief Handles bound violations after QN update by clamping.
+   */
+  void onBoundViolationsClamp(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs);
+  /**
+   * @brief Handles bound violations after QN update by scaling the QN step.
+   */
+  void onBoundViolationsScale(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs, Eigen::VectorXd &xUpdate);
+  /**
+   * @brief Clamp data to their bounds.
+   */
+  void clampToBounds(Eigen::Map<Eigen::MatrixXd> &data, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound);
+  /**
+   * @brief calculate the shortening factor to fit the violating data to the bounds
+   */
+  double computeShorteningFactor(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound);
   /**
    * @brief Marks a iteration sequence as converged.
    *
@@ -152,6 +172,12 @@ public:
    */
   int getMaxUsedTimeWindows() const;
 
+  /// Adds QN-specific columns to the iteration log file
+  void addLogEntries(io::TXTTableWriter &writer) const override;
+
+  /// Writes QN-specific values to the iteration log columns
+  void writeLogEntries(io::TXTTableWriter &writer) const override;
+
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};
 
@@ -173,6 +199,9 @@ protected:
   /// Data IDs of all coupling data.
   std::vector<int> _dataIDs;
 
+  /// Data IDs of all coupling data that have bounds defined.
+  std::vector<DataID> _idsWithBounds;
+
   /// Indicates the first iteration, where constant relaxation is used.
   bool _firstIteration = true;
 
@@ -185,6 +214,8 @@ protected:
    * @brief True if this process has nodes at the coupling interface
    */
   bool _hasNodesOnInterface = true;
+
+  OnBoundViolation _onBoundViolation;
 
   /* @brief If true, the QN-scheme always performs a underrelaxation in the first iteration of
    *        a new time window. Otherwise, the LS system from the previous time window is used in the

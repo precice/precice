@@ -2,7 +2,6 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
-#include <Eigen/src/Core/Matrix.h>
 
 #include "acceleration/SharedPointer.hpp"
 #include "acceleration/test/helper.hpp"

@@ -19,7 +19,7 @@ public:
    */
   ~ConstantPreconditioner() override = default;
 
-  void initialize(std::vector<size_t> &svs) override;
+  void initialize(std::vector<size_t> svs, std::vector<std::string> svNames) override;
 
 private:
   /**

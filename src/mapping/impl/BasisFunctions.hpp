@@ -2,28 +2,17 @@
 
 #include <stdexcept>
 
-#ifdef __CUDACC__
-#include <cuda_runtime.h>
-#endif
+#if !defined(PRECICE_NO_GINKGO) || !defined(PRECICE_NO_KOKKOS_KERNELS)
 
-#ifdef __HIPCC__
-#include <hip/hip_runtime.h>
-#endif
+#include <Kokkos_Core.hpp>
 
-#if defined(__CUDACC__) || defined(__HIPCC__)
-
-#include <ginkgo/extensions/kokkos.hpp>
-#include <ginkgo/ginkgo.hpp>
-
-#define PRECICE_HOST_DEVICE __host__ __device__
-#define PRECICE_MEMORY_SPACE __device__
+#define PRECICE_HOST_DEVICE KOKKOS_FUNCTION
 #define PRECICE_FMA Kokkos::fma
 #define PRECICE_LOG Kokkos::log
 
 #else
 
 #define PRECICE_HOST_DEVICE
-#define PRECICE_MEMORY_SPACE
 #define PRECICE_FMA std::fma
 #define PRECICE_LOG std::log
 
@@ -241,12 +230,12 @@ public:
       : _shape(shape),
         _supportRadius(supportRadius)
   {
-    if (math::greater(_shape, 0.0)) {
-      std::invalid_argument{
+    if (!math::greater(_shape, 0.0)) {
+      throw std::invalid_argument{
           "Shape parameter for radial-basis-function gaussian has to be larger than zero. Please update the \"shape-parameter\" attribute."};
     }
-    if (math::greater(_supportRadius, 0.0)) {
-      std::invalid_argument{
+    if (!math::greater(_supportRadius, 0.0)) {
+      throw std::invalid_argument{
           "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the \"support-radius\" attribute."};
     }
 
@@ -318,8 +307,8 @@ class CompactThinPlateSplinesC2 : public CompactSupportBase,
 public:
   explicit CompactThinPlateSplinesC2(double supportRadius)
   {
-    if (math::greater(supportRadius, 0.0)) {
-      std::invalid_argument{
+    if (!math::greater(supportRadius, 0.0)) {
+      throw std::invalid_argument{
           "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute."};
     }
     _r_inv             = 1. / supportRadius;
@@ -370,8 +359,8 @@ class CompactPolynomialC0 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC0(double supportRadius)
   {
-    if (math::greater(supportRadius, 0.0)) {
-      std::invalid_argument{
+    if (!math::greater(supportRadius, 0.0)) {
+      throw std::invalid_argument{
           "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute."};
     }
     _r_inv             = 1. / supportRadius;
@@ -422,8 +411,8 @@ class CompactPolynomialC2 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC2(double supportRadius)
   {
-    if (math::greater(supportRadius, 0.0)) {
-      std::invalid_argument{
+    if (!math::greater(supportRadius, 0.0)) {
+      throw std::invalid_argument{
           "Support radius for radial-basis-function compact polynomial c2 has to be larger than zero. Please update the \"support-radius\" attribute."};
     }
 
@@ -450,7 +439,7 @@ public:
     return math::pow_int<4>(1.0 - p) * PRECICE_FMA(4, p, 1);
   }
 
-  RadialBasisParameters getFunctionParameters()
+  RadialBasisParameters getFunctionParameters() const
   {
     return _params;
   }
@@ -475,8 +464,8 @@ class CompactPolynomialC4 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC4(double supportRadius)
   {
-    if (math::greater(supportRadius, 0.0)) {
-      std::invalid_argument{
+    if (!math::greater(supportRadius, 0.0)) {
+      throw std::invalid_argument{
           "Support radius for radial-basis-function compact polynomial c4 has to be larger than zero. Please update the \"support-radius\" attribute."};
     }
 
@@ -528,8 +517,8 @@ class CompactPolynomialC6 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC6(double supportRadius)
   {
-    if (math::greater(supportRadius, 0.0)) {
-      std::invalid_argument{
+    if (!math::greater(supportRadius, 0.0)) {
+      throw std::invalid_argument{
           "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute."};
     }
     _r_inv             = 1. / supportRadius;
@@ -580,8 +569,8 @@ class CompactPolynomialC8 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC8(double supportRadius)
   {
-    if (math::greater(supportRadius, 0.0)) {
-      std::invalid_argument{
+    if (!math::greater(supportRadius, 0.0)) {
+      throw std::invalid_argument{
           "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute."};
     }
     _r_inv             = 1. / supportRadius;
@@ -619,7 +608,6 @@ private:
 
 #undef PRECICE_FMA
 #undef PRECICE_LOG
-#undef PRECICE_MEMORY_SPACE
 #undef PRECICE_HOST_DEVICE
 #undef NUMERICAL_ZERO_DIFFERENCE_DEVICE
 

@@ -34,6 +34,11 @@ bool Vertex::isTagged() const
   return _tagged;
 }
 
+void Vertex::setTagged(bool tagged)
+{
+  _tagged = tagged;
+}
+
 void Vertex::tag()
 {
   _tagged = true;

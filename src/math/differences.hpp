@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include "utils/assertion.hpp"
+#include <cstdlib>
 
 namespace precice::math {
 
@@ -17,78 +17,36 @@ constexpr bool equals(const Eigen::MatrixBase<DerivedA> &A,
 }
 
 /// Compares two scalar (arithmetic) types
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type equals(const Scalar a, const Scalar b, const Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+inline bool equals(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  return std::abs(a - b) <= tolerance;
+  auto d     = std::abs(a - b);
+  auto scale = std::max(1.0, std::max(std::abs(a), std::abs(b)));
+  return d <= tolerance * scale;
 }
 
-template <class DerivedA, class DerivedB>
-bool oneGreater(const Eigen::MatrixBase<DerivedA> &A,
-                const Eigen::MatrixBase<DerivedB> &B,
-                double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+inline bool isZero(double a, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
-
-  return ((A - B).array() > tolerance).any();
+  return std::abs(a) < tolerance;
 }
 
-template <class DerivedA, class DerivedB>
-bool oneGreaterEquals(const Eigen::MatrixBase<DerivedA> &A,
-                      const Eigen::MatrixBase<DerivedB> &B,
-                      double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+inline bool greater(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
-
-  return ((A - B).array() >= -tolerance).any();
+  return a > b + tolerance;
 }
 
-template <class DerivedA, class DerivedB>
-bool allGreater(const Eigen::MatrixBase<DerivedA> &A,
-                const Eigen::MatrixBase<DerivedB> &B,
-                double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+inline bool greaterEquals(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
-
-  return ((A - B).array() > tolerance).all();
+  return (a > b) || ::precice::math::equals(a, b, tolerance);
 }
 
-template <class DerivedA, class DerivedB>
-bool allGreaterEquals(const Eigen::MatrixBase<DerivedA> &A,
-                      const Eigen::MatrixBase<DerivedB> &B,
-                      double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+inline bool smaller(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
-
-  return ((A - B).array() >= tolerance).all();
+  return a + tolerance < b;
 }
 
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type greater(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+inline bool smallerEquals(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE) noexcept
 {
-  return A - B > tolerance;
-}
-
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type greaterEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
-{
-  return A - B >= -tolerance;
-}
-
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type smaller(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
-{
-  return A - B < -tolerance;
-}
-
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type smallerEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
-{
-  return A - B <= tolerance;
+  return (a < b) || ::precice::math::equals(a, b, tolerance);
 }
 
 } // namespace precice::math

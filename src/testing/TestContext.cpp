@@ -16,7 +16,7 @@
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
-#include "mapping/device/Ginkgo.hpp"
+#include "mapping/device/Device.hpp"
 #include "mesh/Data.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/EventUtils.hpp"
@@ -154,7 +154,7 @@ void TestContext::initialize(const Participants &participants)
   initializeIntraComm();
   initializeEvents();
   initializePetsc();
-  initializeGinkgo();
+  initializeKokkos();
 }
 
 void TestContext::initializeMPI(const TestContext::Participants &participants)
@@ -203,9 +203,9 @@ void TestContext::initializeIntraComm()
     return;
 
 #ifndef PRECICE_NO_MPI
-  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  auto intraComm = std::make_shared<precice::com::MPIDirectCommunication>();
 #else
-  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::SocketCommunication());
+  auto intraComm = std::make_shared<precice::com::SocketCommunication>();
 #endif
 
   intraComm->connectIntraComm(name, "", rank, size);
@@ -237,20 +237,20 @@ void TestContext::initializePetsc()
   }
 }
 
-void TestContext::initializeGinkgo()
+void TestContext::initializeKokkos()
 {
   if (!invalid && _setup.ginkgo) {
-#ifndef PRECICE_NO_GINKGO
+#if !defined(PRECICE_NO_GINKGO) || !defined(PRECICE_NO_KOKKOS_KERNELS)
     int    argc = 0;
     char **argv;
-    precice::device::Ginkgo::initialize(&argc, &argv);
+    precice::device::Device::initialize(&argc, &argv);
 #endif
   }
 }
 
 m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &connector, const ConnectionOptions &options) const
 {
-  auto participantCom = com::PtrCommunication(new com::SocketCommunication());
+  auto participantCom = std::make_shared<com::SocketCommunication>();
 
   m2n::DistributedComFactory::SharedPointer distrFactory;
   switch (options.type) {

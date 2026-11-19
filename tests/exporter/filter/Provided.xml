@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="S" />
+  <data:vector name="V" />
+
+  <mesh name="MB" dimensions="3">
+    <use-data name="S" />
+    <use-data name="V" />
+  </mesh>
+
+  <mesh name="MA" dimensions="3">
+    <use-data name="S" />
+    <use-data name="V" />
+  </mesh>
+
+  <participant name="SA">
+    <receive-mesh name="MB" from="SB" />
+    <provide-mesh name="MA" />
+    <mapping:nearest-neighbor direction="write" from="MA" to="MB" constraint="conservative" />
+    <mapping:nearest-neighbor direction="read" from="MB" to="MA" constraint="consistent" />
+    <write-data name="S" mesh="MA" />
+    <read-data name="V" mesh="MA" />
+    <export:vtu directory="ExportsA" mesh="MA" />
+  </participant>
+
+  <participant name="SB">
+    <provide-mesh name="MB" />
+    <write-data name="V" mesh="MB" />
+    <read-data name="S" mesh="MB" />
+    <export:vtu directory="ExportsB" mesh="MB" />
+  </participant>
+
+  <m2n:sockets acceptor="SA" connector="SB" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="SA" second="SB" />
+    <max-time-windows value="2" />
+    <time-window-size value="1.0" />
+    <exchange data="S" mesh="MB" from="SA" to="SB" />
+    <exchange data="V" mesh="MB" from="SB" to="SA" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

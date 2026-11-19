@@ -1,4 +1,5 @@
 #include "mapping/device/GinkgoRBFKernels.hpp"
+
 #include "mapping/impl/BasisFunctions.hpp"
 #include "math/math.hpp"
 

@@ -36,6 +36,7 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     int                            filter,
     double                         singularityLimit,
     std::vector<int>               dataIDs,
+    OnBoundViolation               onBoundViolation,
     const impl::PtrPreconditioner &preconditioner,
     bool                           alwaysBuildJacobian,
     int                            imvjRestartType,
@@ -44,7 +45,7 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     double                         RSSVDtruncationEps,
     bool                           reducedTimeGrid)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, std::move(dataIDs), preconditioner, reducedTimeGrid),
+                         filter, singularityLimit, std::move(dataIDs), onBoundViolation, preconditioner, reducedTimeGrid),
       //  _secondaryOldXTildes(),
       _invJacobian(),
       _oldInvJacobian(),
@@ -657,7 +658,11 @@ void IQNIMVJAcceleration::specializedIterationsConverged(
 
     if (_preconditioner->requireNewQR()) {
       if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
-        _qrV.reset(_matrixV, getLSSystemRows());
+        auto failAddedCols = _qrV.reset(_matrixV, getPrimaryLSSystemRows());
+        for (int i : failAddedCols) {
+          removeMatrixColumn(i);
+        }
+        PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
       }
       _preconditioner->newQRfulfilled();
     }

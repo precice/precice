@@ -15,7 +15,7 @@ PR_CMD = (
     "pr",
     "list",
     "--search",
-    f'is:pr is:closed milestone:"{milestone}"',
+    f'is:pr is:merged milestone:"{milestone}" -label:hotfix -label:github_actions',
     "--limit",
     "200",
     "--json",
@@ -32,6 +32,9 @@ prlist = json.loads(
 )
 
 prs = {pr["number"]: pr["title"] for pr in prlist}
+
+print("Make sure the current branch is develop and up-to-date.")
+print()
 
 print("Missing")
 for num, title in prs.items():

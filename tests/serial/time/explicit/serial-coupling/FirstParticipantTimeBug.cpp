@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE(FirstParticipantTimeBug)
     meshName = "SolverTwo-Mesh";
   }
 
-  double   v0[]     = {0, 0, 0};
-  VertexID vertexID = precice.setMeshVertex(meshName, v0);
+  double v0[] = {0, 0, 0};
+  precice.setMeshVertex(meshName, v0);
   precice.initialize();
   while (precice.isCouplingOngoing()) {
     if (context.isNamed("SolverOne")) {

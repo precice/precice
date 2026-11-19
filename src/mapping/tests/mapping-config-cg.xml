@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <!-- Note that the experimental flag is necessary-->
+  <!-- <precice-configuration experimental="True"> -->
+  <mesh name="TestMesh" dimensions="3" />
+
+  <mapping:coarse-graining direction="write" to="TestMesh" constraint="conservative" radius="0.3" />
+</configuration>

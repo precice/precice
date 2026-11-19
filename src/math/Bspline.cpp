@@ -1,13 +1,13 @@
 #include "math/Bspline.hpp"
-#include "math/differences.hpp"
-#include "utils/assertion.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <algorithm>
 #include <cstdlib>
 #include <unsupported/Eigen/Splines>
+
 #include "math/differences.hpp"
+#include "profiling/Event.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::math {
@@ -26,6 +26,8 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
   auto relativeTime = [tsMin = _tsMin, tsMax = _tsMax](double t) -> double { return (t - tsMin) / (tsMax - tsMin); };
   ts                = ts.unaryExpr(relativeTime);
 
+  profiling::Event e("bspline.compute");
+
   // The code for computing the knots and the control points is copied from Eigens bspline interpolation with some modifications
   // https://gitlab.com/libeigen/eigen/-/blob/master/unsupported/Eigen/src/Splines/SplineFitting.h
 
@@ -38,6 +40,7 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
   std::vector<Eigen::Triplet<double>> matrixEntries;
   matrixEntries.reserve(2 + (n - 2) * (splineDegree + 1));
 
+  // Build matrix entries
   matrixEntries.emplace_back(0, 0, 1.0);
   for (Eigen::DenseIndex i = 1; i < n - 1; ++i) {
     const Eigen::DenseIndex span      = Eigen::Spline<double, 1>::Span(ts[i], splineDegree, _knots);
@@ -50,10 +53,12 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
   matrixEntries.emplace_back(n - 1, n - 1, 1.0);
   PRECICE_ASSERT(matrixEntries.capacity() == matrixEntries.size(), matrixEntries.capacity(), matrixEntries.size(), n, splineDegree);
 
+  // Create sparse matrix
   Eigen::SparseMatrix<double> A(n, n);
   A.setFromTriplets(matrixEntries.begin(), matrixEntries.end());
   A.makeCompressed();
 
+  // Solve system
   Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> qr;
   qr.analyzePattern(A);
   qr.factorize(A);

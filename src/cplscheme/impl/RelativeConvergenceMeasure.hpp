@@ -94,7 +94,7 @@ public:
 
   double getNormResidual() override
   {
-    if (math::equals(_norm, 0.))
+    if (math::isZero(_norm))
       return std::numeric_limits<double>::infinity();
     else
       return _normDiff / _norm;

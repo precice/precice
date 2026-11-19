@@ -2,6 +2,61 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.5.0
+
+- Added guidelines for contributing with GenAI agents in `CONTRIBUTING.md`. (https://github.com/precice/precice/pull/2589)
+- Added option to export only a single mesh using `<export:X mesh="Name" />`. Not specifying a mesh will export all meshes known to the participant. (https://github.com/precice/precice/pull/2462)
+- Added optional performance regression testing between PR and develop or develop and main. (https://github.com/precice/precice/pull/2465)
+- Added support for conservative PU-RBF mappings via Kokkos (CUDA, HIP, SYCL, OpenMP). (https://github.com/precice/precice/pull/2536)
+- Changed the baseline from Ubuntu 22.04 LTS to Ubuntu 24.04 LTS, which lifts minimum required versions of dependencies to: CMake 3.28.3, GCC/stdlibc++ 13.2.0, Eigen 3.4.0 (remains), Boost 1.83.0, PETSc 3.19, Python 3.12.3, and Numpy 1.26.4. (https://github.com/precice/precice/pull/2564)
+- Fixed the consistent `radial-geometric-multiscale` mapping in collection mode to check all output vertices to be assigned to at least one input vertex. (https://github.com/precice/precice/pull/2527)
+- Fixed the libxml2 dependency specification in the Debian package for Ubuntu 25.10 and newer. (https://github.com/precice/precice/pull/2560)
+- Fixed CMake linking `libprecice` instead of the test binary against the Boost unit test framework. (https://github.com/precice/precice/pull/2597)
+- Fixed CMake requiring Boost unit test framework even when tests are disabled. (https://github.com/precice/precice/pull/2597)
+- Fixed Debian package file permissions. (https://github.com/precice/precice/pull/2563)
+- Improved mesh filtering, merging speeds and memory consumption. (https://github.com/precice/precice/pull/2591)
+- Improved timestamp comparison for large absolute values. (https://github.com/precice/precice/pull/2601)
+- Removed broken support of using static Boost due to incompatibility with Boost.Log. CMake will raise an error when `Boost_USE_STATIC_LIBS` is enabled. (https://github.com/precice/precice/pull/2597)
+
+## 3.4.1
+
+- Fixed `std::optional` usage in Kokkos kernel implementations. (https://github.com/precice/precice/pull/2551)
+- Fixed include bug where compiling with Kokkos-Kernels depends on Ginkgo. (https://github.com/precice/precice/pull/2549)
+
+## 3.4.0
+
+- Added a conservative just-in-time coarse-graining mapping variant. (https://github.com/precice/precice/pull/2301)
+- Added compatibility with SYCL, supported in the batched PU-RBF solver. (https://github.com/precice/precice/pull/2346)
+- Added general configurable lower and upper bounds for scalar and vector data, currently only used by quasi-Newton accelerations, see option `on-bound-violation`. (https://github.com/precice/precice/pull/1952)
+- Added configurable multiscale-spread-profile option to axial geometric multiscale mapping, allowing users to select between `uniform` and `parabolic` field distributions when spreading 1D data to 3D. (https://github.com/precice/precice/pull/2386)
+- Added 1D-2D and 2D-3D options to the axial geometric multiscale mapping, as well as a square cross-section option for the 1D-3D and 2D-3D mappings. (https://github.com/precice/precice/pull/2453)
+- Added configuration validation error when neither max-time nor max-time-windows is defined in a coupling scheme. (https://github.com/precice/precice/pull/2459)
+- Added consistently named Fortran functions `precicef_set_mesh_vertex_`, `precicef_set_mesh_vertices_`, `precicef_set_mesh_edge_`, `precicef_set_mesh_triangle_`, `precicef_set_mesh_quad_`, and `precicef_set_mesh_tetrahedron_` to match the C/C++ API naming convention. (https://github.com/precice/precice/pull/2487)
+- Added post-processing methods to quasi-Newton acceleration to handle steps that would violate defined data bounds. Options for `on-bound-violation` are `discard`, `clamp` or `scale` QN steps. Default is to `ignore` violations. (https://github.com/precice/precice/pull/1952)
+- Added support for a batched RBF-PUM solver for consistent mappings using Kokkos and Kokkos-Kernels, which can be enabled using the CMake option `PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING`. The solver can leverage OpenMP, CUDA, HIP, and SYCL as executors. (https://github.com/precice/precice/pull/2346)
+- Changed iteration log files to only include QN-specific columns when using quasi-Newton acceleration schemes. Non-QN accelerations no longer write these columns with placeholder zeros. (https://github.com/precice/precice/pull/2420)
+- Changed preconditioner warnings to include the data name when sub-vectors become zero. (https://github.com/precice/precice/pull/2473)
+- Changed the write data buffer of received meshes to be reset after repartitioning. (https://github.com/precice/precice/pull/2234)
+- Deprecated Fortran functions `precicef_set_vertex_`, `precicef_set_vertices_`, `precicef_set_edge_`, `precicef_set_triangle_`, `precicef_set_quad_`, and `precicef_set_tetrahedron`. Use the new `precicef_set_mesh_*` variants instead. (https://github.com/precice/precice/pull/2487)
+- Fixed `QR1` filter in IQN acceleration schemes crashing on reset. This bug was introduced in preCICE version 3.2.0. (https://github.com/precice/precice/pull/2532)
+- Fixed a race condition in the two-level initialization that can cause a crash. This bug was introduced with the initial version of the feature. (https://github.com/precice/precice/pull/2446)
+- Fixed applying the safety factor when merging the bounding boxes during the repartitioning. (https://github.com/precice/precice/pull/2330)
+- Fixed deprecation warning for PETSc 3.24 and newer. (https://github.com/precice/precice/pull/2398)
+- Fixed invalid indexing for scalar data in axial geometric multiscale mapping by introducing explicit scalar handling. (https://github.com/precice/precice/pull/2377)
+- Changed `boost::asio::deadline_timer` to `boost::asio::system_timer`, which was deprecated in Boost 1.87.0. (https://github.com/precice/precice/pull/2428)
+- Improved computation and mapping speed of nearest-projection and linear-cell-interpolation mappings. (https://github.com/precice/precice/pull/2406)
+- Improved configuration reading to use a single call if possible. This avoids the partially multi-second latency on slow filesystems used on clusters and supercomputers. (https://github.com/precice/precice/pull/2448)
+
+## 3.3.1
+
+- Added CMake option `Boost_USE_STATIC_LIBS` defaulting to OFF which forces Boost to find shared library by default. (https://github.com/precice/precice/pull/2415)
+- Fixed compilation error on non-POSIX systems due to unused inclusion of `<string.h>` (https://github.com/precice/precice/pull/2424)
+- Fixed compilation with C++20 required by Kokkos 5.0.0 (https://github.com/precice/precice/pull/2410)
+- Fixed incorrect macro for Windows detection. (https://github.com/precice/precice/pull/2424)
+- Fixed incorrect rank event output when nesting user-defined profiling sections. (https://github.com/precice/precice/pull/2393)
+- Fixed logging of filtered vertices for direct mesh access. (https://github.com/precice/precice/pull/2427)
+- Fixed preprocessor if inside function-like macro invocation leading to errors in MSVC. (https://github.com/precice/precice/pull/2424)
+
 ## 3.3.0
 
 - Added CMake option `PRECICE_FEATURE_PROFILING_COMPRESSION` to optionally enable LZMA compression of the textual records of the profiling files. (https://github.com/precice/precice/pull/2328)
@@ -275,7 +330,7 @@ All notable changes to this project will be documented in this file. For future 
 - Replaced `isActionRequired()` and `markActionFulfilled()` with explicit calls `requiresInitialData()`, `requiresReadingCheckpoint()`, and `requiresWritingCheckpoint()`. Invoking these functions is a promise to preCICE that the caller fulfills the requirement. (https://github.com/precice/precice/pull/1487)
 - Replaced all `<mapping:rbf... />` related tags. RBF mappings are now defined in terms of the applied solver (`<mapping:rbf-global-direct ...` or `<mapping:rbf-global-iterative`) and the applied basis function is a subtag of the solver. Users should use the additionally added auto selection of an appropriate solver as follows: `<mapping:rbf  ...> <basis-function:... /> </mapping:rbf>`. Example: `<mapping:compact-polynomial-c0 direction="read" from= ... support-radius="0.3" />` would become `<mapping:rbf  direction="read" from= ...> <basis-function:compact-polynomial-c0 support-radius="0.3" /> </mapping:rbf>` (https://github.com/precice/precice/pull/1550)
 - Replaced tag `<use-mesh />` with dedicated tags for `<receive-mesh />` and `<provide-mesh />`. (https://github.com/precice/precice/pull/1450)
-- Replaced the Eigen-based QR decomposition by a Cholesky decomposition for s.p.d. data mapping matrices, resulting in a signifacant speed-up (affecting Gaussian RBF, compact polynomial RBFs and inverse multiquadrics). (https://github.com/precice/precice/pull/1372)
+- Replaced the Eigen-based QR decomposition by a Cholesky decomposition for s.p.d. data mapping matrices, resulting in a significant speed-up (affecting Gaussian RBF, compact polynomial RBFs and inverse multiquadrics). (https://github.com/precice/precice/pull/1372)
 - Replaced the internal profiling tool to improve error-robustness and reduce complexity. (https://github.com/precice/precice/pull/1419)
 - Updated fmt to version 10.2.1 (https://github.com/precice/precice/pull/1928)
 

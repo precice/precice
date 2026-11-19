@@ -33,7 +33,7 @@ set(CPACK_PACKAGE_VERSION "${preCICE_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${CPACK_SYSTEM_NAME}")
 set(CPACK_PACKAGE_VENDOR "precice.org")
 set(CPACK_PACKAGE_CONTACT "The precice developers <precice@mailman.informatik.uni-stuttgart.de>")
-set(CPACK_PACKAGE_DESCRIPTION "preCICE (Precise Code Interaction Coupling Environment) is a coupling library for partitioned multi-physics simulations, including, but not restricted to fluid-structure interaction and conjugate heat transfer simulations. Partitioned means that preCICE couples existing programs (solvers) capable of simulating a subpart of the complete physics involved in a simulation. This allows for the high flexibility that is needed to keep a decent time-to-solution for complex multi-physics scenarios.")
+set(CPACK_PACKAGE_DESCRIPTION "preCICE (Precise Code Interaction Coupling Environment) is a coupling library and ecosystem for general partitioned multi-physics and multi-scale simulations, including surface and volume coupling. Partitioned means that preCICE couples existing programs (solvers) capable of simulating a subpart of the complete physics involved in a simulation. This allows for the high flexibility that is needed to keep a decent time-to-solution for complex coupled problems. This package provides the core library.")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Precise Code Interaction Coupling Environment")
 set(CPACK_PACKAGE_EXECUTABLES "testprecice;precice-tools")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://precice.org")
@@ -61,7 +61,7 @@ set(CPACK_SOURCE_IGNORE_FILES
 
 # Build dependency set
 unset(CPACK_DEBIAN_PACKAGE_DEPENDS)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2-dev")
 if(PRECICE_FEATURE_PYTHON_ACTIONS)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, python3-dev, python3-numpy")
 endif()
@@ -77,13 +77,13 @@ set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "python3")
 
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "\
- preCICE is a coupling library for partitioned multi-physics simulations,\n\
- including, but not restricted to fluid-structure interaction and\n\
- conjugate heat transfer simulations.\n\
+ preCICE is a coupling library and ecosystem for general partitioned multi-physics\n\
+ and multi-scale simulations, including surface and volume coupling.\n\
  Partitioned means that preCICE couples existing programs (solvers) capable of\n\
  simulating a subpart of the complete physics involved in a simulation.\n\
  This allows for the high flexibility that is needed to keep a decent\n\
- time-to-solution for complex multi-physics scenarios.\
+ time-to-solution for complex coupled problems.\n\
+ This package provides the core library.\
 ")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_STRUCT_PERMISSION TRUE)
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${preCICE_SOURCE_DIR}/tools/releasing/packaging/debian/triggers")
@@ -94,6 +94,13 @@ set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
 set(CPACK_DEBIAN_PACKAGE_PROVIDES precice)
 set(CPACK_DEBIAN_PACKAGE_CONFLICTS "precice, libprecice2")
 set(CPACK_DEBIAN_PACKAGE_REPLACES precice)
+
+# Fix package permissions
+set(CPACK_DEBIAN_PACKAGE_CONTROL_STRICT_PERMISSION TRUE)
+set(CPACK_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE)
 
 # Install doc files
 install(FILES tools/releasing/packaging/debian/copyright
