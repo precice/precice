@@ -207,6 +207,9 @@ void ProvidedPartition::prepare()
 
   } else {
     // The only rank of the participant contains all vertices
+    PRECICE_CHECK(numberOfVertices > 0,
+                  "The provided mesh \"{}\" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize().",
+                  _mesh->getName());
     _mesh->setVertexDistribution([&] {
       mesh::Mesh::VertexDistribution vertexDistribution;
       for (int i = 0; i < numberOfVertices; i++) {
@@ -225,7 +228,9 @@ void ProvidedPartition::prepare()
     v.setOwner(true);
   }
 
-  PRECICE_ASSERT(_mesh->getGlobalNumberOfVertices() > 0);
+  PRECICE_CHECK(_mesh->getGlobalNumberOfVertices() > 0,
+                "The provided mesh \"{}\" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize().",
+                _mesh->getName());
   PRECICE_ASSERT(!_mesh->getVertexOffsets().empty());
 }
 
