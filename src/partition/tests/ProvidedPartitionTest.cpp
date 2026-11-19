@@ -55,6 +55,20 @@ BOOST_AUTO_TEST_CASE(EmptyProvidedMeshThrows)
 }
 
 #ifndef PRECICE_NO_MPI
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(EmptyProvidedMeshThrowsOnTwoRanks)
+{
+  using namespace precice;
+  PRECICE_TEST();
+  int               dimensions = 2;
+  mesh::PtrMesh     pMesh(new mesh::Mesh("EmptyMesh", dimensions, testing::nextMeshID()));
+  ProvidedPartition partition(pMesh);
+  BOOST_CHECK_EXCEPTION(partition.communicate(),
+                        ::precice::Error,
+                        ::precice::testing::errorContains("The provided mesh \"EmptyMesh\" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize()."));
+}
+
 PRECICE_TEST_SETUP("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 {
