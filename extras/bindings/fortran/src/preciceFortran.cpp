@@ -22,19 +22,44 @@
 
 using namespace std;
 
+namespace precice::bindings::fortran {
+
 static std::unique_ptr<precice::Participant> impl = nullptr;
 
-static std::string errormsg = "preCICE has not been created properly. Be sure to call \"precicef_create\" before any other call to preCICE.";
+/// Returns length of string without trailing whitespace.
+int strippedLength(const char *string, int length)
+{
+  int i = length - 1;
+  while (((string[i] == ' ') || (string[i] == 0)) && (i >= 0)) {
+    i--;
+  }
+  return i + 1;
+}
 
-namespace precice::impl {
-/**
- * @brief Returns length of string without trailing whitespace.
- */
-int strippedLength(const char *string, int length);
+std::string_view strippedStringView(const char *string, int length)
+{
+  return {string, static_cast<std::string_view::size_type>(strippedLength(string, length))};
+}
 
-std::string_view strippedStringView(const char *string, int length);
+void ensureNotConstructed()
+{
+  if (impl != nullptr) {
+    std::cerr << "ERROR: The participant has already been created. Be sure to call \"precicef_finalize\" first.\n";
+    std::abort();
+  }
+}
 
-} // namespace precice::impl
+void ensureConstructed()
+{
+  if (impl == nullptr) {
+    std::cerr << "ERROR: The participant has not yet been created. Be sure to call \"precicef_create\" first.\n";
+    std::abort();
+  }
+}
+
+} // namespace precice::bindings::fortran
+
+using namespace precice::bindings::fortran;
 
 void precicef_create_(
     const char *participantName,
@@ -44,9 +69,10 @@ void precicef_create_(
     int         participantNameLength,
     int         configFileNameLength)
 try {
+  ensureNotConstructed();
   impl = std::make_unique<precice::Participant>(
-      precice::impl::strippedStringView(participantName, participantNameLength),
-      precice::impl::strippedStringView(configFileName, configFileNameLength),
+      strippedStringView(participantName, participantNameLength),
+      strippedStringView(configFileName, configFileNameLength),
       *solverProcessIndex,
       *solverProcessSize);
 } catch (::precice::Error &e) {
@@ -62,6 +88,7 @@ void precicef_create_with_communicator_(
     int         participantNameLength,
     int         configFileNameLength)
 try {
+  ensureNotConstructed();
 #ifndef PRECICE_NO_MPI
   // MPI_Comm_f2c requires an MPI_Fint argument, which may differ from int.
   // However, the Fortran standard guarantees interoperability of the int type,
@@ -70,16 +97,16 @@ try {
   MPI_Fint f_communicator = static_cast<MPI_Fint>(*communicator);
   auto     c_communicator = MPI_Comm_f2c(f_communicator);
   impl                    = std::make_unique<precice::Participant>(
-      precice::impl::strippedStringView(participantName, participantNameLength),
-      precice::impl::strippedStringView(configFileName, configFileNameLength),
+      strippedStringView(participantName, participantNameLength),
+      strippedStringView(configFileName, configFileNameLength),
       *solverProcessIndex,
       *solverProcessSize,
       &c_communicator);
 #else
-  PRECICE_WARN("preCICE was configured without MPI but you passed an MPI communicator. preCICE ignores the communicator and continues.");
+  std::cerr << "WARNING: preCICE was configured without MPI but you passed an MPI communicator. preCICE ignores the communicator and continues.";
   impl = std::make_unique<precice::Participant>(
-      precice::impl::strippedStringView(participantName, participantNameLength),
-      precice::impl::strippedStringView(configFileName, configFileNameLength),
+      strippedStringView(participantName, participantNameLength),
+      strippedStringView(configFileName, configFileNameLength),
       *solverProcessIndex,
       *solverProcessSize);
 #endif
@@ -89,10 +116,7 @@ try {
 
 void precicef_initialize_()
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   impl->initialize();
 } catch (::precice::Error &e) {
   std::abort();
@@ -101,10 +125,7 @@ try {
 void precicef_advance_(
     const double *timeStepSize)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   impl->advance(*timeStepSize);
 } catch (::precice::Error &e) {
   std::abort();
@@ -112,10 +133,7 @@ try {
 
 void precicef_finalize_()
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   impl->finalize();
   impl.reset();
 } catch (::precice::Error &e) {
@@ -127,11 +145,8 @@ void precicef_get_mesh_dimensions_(
     int        *dimensions,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  *dimensions = impl->getMeshDimensions(precice::impl::strippedStringView(meshName, meshNameLength));
+  ensureConstructed();
+  *dimensions = impl->getMeshDimensions(strippedStringView(meshName, meshNameLength));
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -143,11 +158,8 @@ void precicef_get_data_dimensions_(
     int         meshNameLength,
     int         dataNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  *dimensions = impl->getDataDimensions(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength));
+  ensureConstructed();
+  *dimensions = impl->getDataDimensions(strippedStringView(meshName, meshNameLength), strippedStringView(dataName, dataNameLength));
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -155,10 +167,7 @@ try {
 void precicef_is_coupling_ongoing_(
     int *isOngoing)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   if (impl->isCouplingOngoing()) {
     *isOngoing = 1;
   } else {
@@ -171,10 +180,7 @@ try {
 void precicef_is_time_window_complete_(
     int *isComplete)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   if (impl->isTimeWindowComplete()) {
     *isComplete = 1;
   } else {
@@ -187,10 +193,7 @@ try {
 void precicef_get_max_time_step_size_(
     double *maxTimeStepSize)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   *maxTimeStepSize = impl->getMaxTimeStepSize();
 } catch (::precice::Error &e) {
   std::abort();
@@ -199,10 +202,7 @@ try {
 void precicef_requires_initial_data_(
     int *isRequired)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   *isRequired = impl->requiresInitialData() ? 1 : 0;
 } catch (::precice::Error &e) {
   std::abort();
@@ -211,10 +211,7 @@ try {
 void precicef_requires_writing_checkpoint_(
     int *isRequired)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   *isRequired = impl->requiresWritingCheckpoint() ? 1 : 0;
 } catch (::precice::Error &e) {
   std::abort();
@@ -223,10 +220,7 @@ try {
 void precicef_requires_reading_checkpoint_(
     int *isRequired)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   *isRequired = impl->requiresReadingCheckpoint() ? 1 : 0;
 } catch (::precice::Error &e) {
   std::abort();
@@ -237,11 +231,8 @@ void precicef_requires_mesh_connectivity_for_(
     int        *required,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  if (impl->requiresMeshConnectivityFor(precice::impl::strippedStringView(meshName, meshNameLength))) {
+  ensureConstructed();
+  if (impl->requiresMeshConnectivityFor(strippedStringView(meshName, meshNameLength))) {
     *required = 1;
   } else {
     *required = 0;
@@ -254,11 +245,8 @@ void precicef_reset_mesh_(
     const char *meshName,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  impl->resetMesh(precice::impl::strippedStringView(meshName, meshNameLength));
+  ensureConstructed();
+  impl->resetMesh(strippedStringView(meshName, meshNameLength));
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -269,11 +257,8 @@ void precicef_set_mesh_vertex_(
     int          *vertexID,
     int           meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  auto sv           = precice::impl::strippedStringView(meshName, meshNameLength);
+  ensureConstructed();
+  auto sv           = strippedStringView(meshName, meshNameLength);
   auto positionSize = static_cast<unsigned long>(impl->getMeshDimensions(sv));
   *vertexID         = impl->setMeshVertex(sv, {position, positionSize});
 } catch (::precice::Error &e) {
@@ -285,11 +270,8 @@ void precicef_get_mesh_vertex_size_(
     int        *meshSize,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  *meshSize = impl->getMeshVertexSize(precice::impl::strippedStringView(meshName, meshNameLength));
+  ensureConstructed();
+  *meshSize = impl->getMeshVertexSize(strippedStringView(meshName, meshNameLength));
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -301,11 +283,8 @@ void precicef_set_mesh_vertices_(
     int        *ids,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  auto sv           = precice::impl::strippedStringView(meshName, meshNameLength);
+  ensureConstructed();
+  auto sv           = strippedStringView(meshName, meshNameLength);
   auto positionSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * *size);
   impl->setMeshVertices(sv, {coordinates, positionSize}, {ids, static_cast<unsigned long>(*size)});
 } catch (::precice::Error &e) {
@@ -318,11 +297,8 @@ void precicef_set_mesh_edge_(
     const int  *secondVertexID,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  impl->setMeshEdge(precice::impl::strippedStringView(meshName, meshNameLength), *firstVertexID, *secondVertexID);
+  ensureConstructed();
+  impl->setMeshEdge(strippedStringView(meshName, meshNameLength), *firstVertexID, *secondVertexID);
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -333,12 +309,9 @@ void precicef_set_mesh_edges_(
     const int  *ids,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   auto idsSize = static_cast<unsigned long>(*size) * 2;
-  impl->setMeshEdges(precice::impl::strippedStringView(meshName, meshNameLength), {ids, idsSize});
+  impl->setMeshEdges(strippedStringView(meshName, meshNameLength), {ids, idsSize});
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -350,11 +323,8 @@ void precicef_set_mesh_triangle_(
     const int  *thirdVertexID,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  impl->setMeshTriangle(precice::impl::strippedStringView(meshName, meshNameLength), *firstVertexID, *secondVertexID, *thirdVertexID);
+  ensureConstructed();
+  impl->setMeshTriangle(strippedStringView(meshName, meshNameLength), *firstVertexID, *secondVertexID, *thirdVertexID);
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -365,12 +335,9 @@ void precicef_set_mesh_triangles_(
     const int  *ids,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   auto idsSize = static_cast<unsigned long>(*size) * 3;
-  impl->setMeshTriangles(precice::impl::strippedStringView(meshName, meshNameLength), {ids, idsSize});
+  impl->setMeshTriangles(strippedStringView(meshName, meshNameLength), {ids, idsSize});
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -383,11 +350,8 @@ void precicef_set_mesh_quad_(
     const int  *fourthVertexID,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  impl->setMeshQuad(precice::impl::strippedStringView(meshName, meshNameLength), *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
+  ensureConstructed();
+  impl->setMeshQuad(strippedStringView(meshName, meshNameLength), *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -398,12 +362,9 @@ void precicef_set_mesh_quads_(
     const int  *ids,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   auto idsSize = static_cast<unsigned long>(*size) * 4;
-  impl->setMeshQuads(precice::impl::strippedStringView(meshName, meshNameLength), {ids, idsSize});
+  impl->setMeshQuads(strippedStringView(meshName, meshNameLength), {ids, idsSize});
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -416,11 +377,8 @@ void precicef_set_mesh_tetrahedron_(
     const int  *fourthVertexID,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  impl->setMeshTetrahedron(precice::impl::strippedStringView(meshName, meshNameLength), *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
+  ensureConstructed();
+  impl->setMeshTetrahedron(strippedStringView(meshName, meshNameLength), *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -431,12 +389,9 @@ void precicef_set_mesh_tetrahedra_(
     const int  *ids,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   auto idsSize = static_cast<unsigned long>(*size) * 4;
-  impl->setMeshTetrahedra(precice::impl::strippedStringView(meshName, meshNameLength), {ids, idsSize});
+  impl->setMeshTetrahedra(strippedStringView(meshName, meshNameLength), {ids, idsSize});
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -450,12 +405,9 @@ void precicef_write_data_(
     int         meshNameLength,
     int         dataNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  auto strippedMeshName = precice::impl::strippedStringView(meshName, meshNameLength);
-  auto strippedDataName = precice::impl::strippedStringView(dataName, dataNameLength);
+  ensureConstructed();
+  auto strippedMeshName = strippedStringView(meshName, meshNameLength);
+  auto strippedDataName = strippedStringView(dataName, dataNameLength);
   auto dataSize         = *size * impl->getDataDimensions(strippedMeshName, strippedDataName);
   impl->writeData(strippedMeshName,
                   strippedDataName,
@@ -475,12 +427,9 @@ void precicef_read_data_(
     int           meshNameLength,
     int           dataNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  auto strippedMeshName = precice::impl::strippedStringView(meshName, meshNameLength);
-  auto strippedDataName = precice::impl::strippedStringView(dataName, dataNameLength);
+  ensureConstructed();
+  auto strippedMeshName = strippedStringView(meshName, meshNameLength);
+  auto strippedDataName = strippedStringView(dataName, dataNameLength);
   auto dataSize         = *size * impl->getDataDimensions(strippedMeshName, strippedDataName);
   impl->readData(
       strippedMeshName,
@@ -490,22 +439,6 @@ try {
       {values, static_cast<unsigned long>(dataSize)});
 } catch (::precice::Error &e) {
   std::abort();
-}
-
-int precice::impl::strippedLength(
-    const char *string,
-    int         length)
-{
-  int i = length - 1;
-  while (((string[i] == ' ') || (string[i] == 0)) && (i >= 0)) {
-    i--;
-  }
-  return i + 1;
-}
-
-std::string_view precice::impl::strippedStringView(const char *string, int length)
-{
-  return {string, static_cast<std::string_view::size_type>(strippedLength(string, length))};
 }
 
 void precicef_get_version_information_(
@@ -521,11 +454,8 @@ void precicef_requires_gradient_data_for_(
     int meshNameLength,
     int dataNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  if (impl->requiresGradientDataFor(precice::impl::strippedStringView(meshName, meshNameLength), precice::impl::strippedStringView(dataName, dataNameLength))) {
+  ensureConstructed();
+  if (impl->requiresGradientDataFor(strippedStringView(meshName, meshNameLength), strippedStringView(dataName, dataNameLength))) {
     *required = 1;
   } else {
     *required = 0;
@@ -543,12 +473,9 @@ void precicef_write_gradient_data_(
     int           meshNameLength,
     int           dataNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  auto strippedMeshName   = precice::impl::strippedStringView(meshName, meshNameLength);
-  auto strippedDataName   = precice::impl::strippedStringView(dataName, dataNameLength);
+  ensureConstructed();
+  auto strippedMeshName   = strippedStringView(meshName, meshNameLength);
+  auto strippedDataName   = strippedStringView(dataName, dataNameLength);
   auto gradientComponents = impl->getMeshDimensions(strippedMeshName) * impl->getDataDimensions(strippedMeshName, strippedDataName);
   auto gradientSize       = *size * gradientComponents;
 
@@ -569,12 +496,9 @@ void precicef_write_and_map_data_(
     int         meshNameLength,
     int         dataNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  auto strippedMeshName = precice::impl::strippedStringView(meshName, meshNameLength);
-  auto strippedDataName = precice::impl::strippedStringView(dataName, dataNameLength);
+  ensureConstructed();
+  auto strippedMeshName = strippedStringView(meshName, meshNameLength);
+  auto strippedDataName = strippedStringView(dataName, dataNameLength);
   auto coordinatesSize  = *size * impl->getMeshDimensions(strippedMeshName);
   auto dataSize         = *size * impl->getDataDimensions(strippedMeshName, strippedDataName);
   impl->writeAndMapData(strippedMeshName,
@@ -595,12 +519,9 @@ void precicef_map_and_read_data_(
     int           meshNameLength,
     int           dataNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  auto strippedMeshName = precice::impl::strippedStringView(meshName, meshNameLength);
-  auto strippedDataName = precice::impl::strippedStringView(dataName, dataNameLength);
+  ensureConstructed();
+  auto strippedMeshName = strippedStringView(meshName, meshNameLength);
+  auto strippedDataName = strippedStringView(dataName, dataNameLength);
   auto coordinatesSize  = *size * impl->getMeshDimensions(strippedMeshName);
   auto dataSize         = *size * impl->getDataDimensions(strippedMeshName, strippedDataName);
   impl->mapAndReadData(
@@ -618,11 +539,8 @@ void precicef_set_mesh_access_region_(
     const double *boundingBox,
     int           meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  auto sv     = precice::impl::strippedStringView(meshName, meshNameLength);
+  ensureConstructed();
+  auto sv     = strippedStringView(meshName, meshNameLength);
   auto bbSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * 2);
   impl->setMeshAccessRegion(sv, {boundingBox, bbSize});
 } catch (::precice::Error &e) {
@@ -636,11 +554,8 @@ void precicef_get_mesh_vertex_ids_and_coordinates_(
     double     *coordinates,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  auto sv              = precice::impl::strippedStringView(meshName, meshNameLength);
+  ensureConstructed();
+  auto sv              = strippedStringView(meshName, meshNameLength);
   auto coordinatesSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * *size);
   impl->getMeshVertexIDsAndCoordinates(sv, {ids, static_cast<unsigned long>(*size)}, {coordinates, coordinatesSize});
 } catch (::precice::Error &e) {
@@ -651,11 +566,8 @@ void precicef_start_profiling_section_(
     const char *sectionName,
     int         sectionNameLength)
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
-  auto sv = precice::impl::strippedStringView(sectionName, sectionNameLength);
+  ensureConstructed();
+  auto sv = strippedStringView(sectionName, sectionNameLength);
   impl->startProfilingSection(sv);
 } catch (::precice::Error &e) {
   std::abort();
@@ -663,10 +575,7 @@ try {
 
 void precicef_stop_last_profiling_section_()
 try {
-  if (impl != nullptr) {
-    std::cerr << errormsg;
-    std::abort();
-  }
+  ensureConstructed();
   impl->stopLastProfilingSection();
 } catch (::precice::Error &e) {
   std::abort();
