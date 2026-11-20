@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="Data" />
+
+  <mesh name="Mesh-One" dimensions="2">
+    <use-data name="Data" />
+  </mesh>
+
+  <mesh name="Mesh-Two" dimensions="2">
+    <use-data name="Data" />
+  </mesh>
+
+  <participant name="Participant-One">
+    <provide-mesh name="Mesh-One" />
+    <receive-mesh name="Mesh-Two" from="Participant-Two" />
+    <mapping:rbf-global-iterative
+      direction="read"
+      from="Mesh-Two"
+      to="Mesh-One"
+      constraint="consistent">
+      <basis-function:thin-plate-splines />
+      <executor:cpu />
+    </mapping:rbf-global-iterative>
+  </participant>
+
+  <participant name="Participant-Two">
+    <provide-mesh name="Mesh-Two" />
+    <receive-mesh name="Mesh-One" from="Participant-One" />
+  </participant>
+
+  <m2n:sockets acceptor="Participant-One" connector="Participant-Two" />
+</precice-configuration>

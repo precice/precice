@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
   BOOST_TEST(meshConfig->meshes().size() == 13);
   BOOST_TEST(mappingConfig.mappings().size() == 12);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
-    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping == nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
   BOOST_TEST(meshConfig->meshes().size() == 13);
   BOOST_TEST(mappingConfig.mappings().size() == 12);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
-    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping == nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
   BOOST_TEST(meshConfig->meshes().size() == 13);
   BOOST_TEST(mappingConfig.mappings().size() == 12);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
-    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping == nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::WRITE);
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
 
   BOOST_TEST(meshConfig->meshes().size() == 3);
   BOOST_TEST(mappingConfig.mappings().size() == 2);
-  BOOST_TEST(mappingConfig.mappings().at(0).mapping != nullptr);
+  BOOST_TEST(mappingConfig.mappings().at(0).mapping == nullptr);
   BOOST_TEST(mappingConfig.mappings().at(0).fromMesh == meshConfig->meshes().at(0));
   BOOST_TEST(mappingConfig.mappings().at(0).toMesh == meshConfig->meshes().at(2));
   BOOST_TEST(mappingConfig.mappings().at(0).direction == MappingConfiguration::WRITE);
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
   BOOST_TEST(mappingConfig.mappings().at(0).configuredWithAliasTag == true);
 
   // The second mapping
-  BOOST_TEST(mappingConfig.mappings().at(1).mapping != nullptr);
+  BOOST_TEST(mappingConfig.mappings().at(1).mapping == nullptr);
   BOOST_TEST(mappingConfig.mappings().at(1).fromMesh == meshConfig->meshes().at(2));
   BOOST_TEST(mappingConfig.mappings().at(1).toMesh == meshConfig->meshes().at(1));
   BOOST_TEST(mappingConfig.mappings().at(1).direction == MappingConfiguration::READ);
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoCudaConfiguration)
   BOOST_TEST(meshConfig->meshes().size() == 3);
   BOOST_TEST(mappingConfig.mappings().size() == 2);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
-    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping == nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoHipConfiguration)
   BOOST_TEST(meshConfig->meshes().size() == 3);
   BOOST_TEST(mappingConfig.mappings().size() == 2);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
-    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping == nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoOMPConfiguration)
   BOOST_TEST(meshConfig->meshes().size() == 2);
   BOOST_TEST(mappingConfig.mappings().size() == 1);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
-    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping == nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::WRITE);
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(RBFPUMCudaConfiguration)
   BOOST_TEST(meshConfig->meshes().size() == 5);
   BOOST_TEST(mappingConfig.mappings().size() == 4);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
-    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping == nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(RBFPUMHipConfiguration)
   BOOST_TEST(meshConfig->meshes().size() == 5);
   BOOST_TEST(mappingConfig.mappings().size() == 4);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
-    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping == nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(RBFPUMOpenMPConfiguration)
   BOOST_TEST(meshConfig->meshes().size() == 5);
   BOOST_TEST(mappingConfig.mappings().size() == 4);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
-    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping == nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
     BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
     BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);

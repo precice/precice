@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 #include "logging/Logger.hpp"
@@ -21,6 +22,41 @@ public:
     READ
   };
 
+  struct RBFConfiguration {
+
+    enum struct SystemSolver {
+      GlobalDirect,
+      GlobalIterative,
+      PUMDirect
+    };
+    SystemSolver        solver{};
+    std::array<bool, 3> deadAxis{};
+    Polynomial          polynomial{};
+    double              solverRtol{};
+    int                 verticesPerCluster{};
+    double              relativeOverlap{};
+    bool                projectToInput{};
+    BasisFunction       basisFunction{};
+    double              supportRadius{};
+    double              shapeParameter{};
+    bool                basisFunctionDefined = false;
+  };
+
+  struct ExecutorConfiguration {
+    enum struct Executor {
+      CPU,
+      CUDA,
+      HIP,
+      SYCL,
+      OpenMP
+    };
+
+    Executor executor = Executor::CPU;
+    int      deviceId{};
+    int      nThreads{};
+    bool     computeEvaluationOffline = true;
+  };
+
   /// Configuration data for one mapping.
   struct ConfiguredMapping {
     /// Mapping object.
@@ -33,6 +69,14 @@ public:
     Direction direction;
     /// true for RBF mapping
     bool requiresBasisFunction;
+    /// Mapping constraint.
+    Mapping::Constraint constraint;
+    /// True for scaled-consistent mappings.
+    bool isScaledConsistent;
+    /// RBF settings captured during parsing.
+    std::optional<RBFConfiguration> rbfConfiguration;
+    /// Executor settings captured during parsing.
+    std::optional<ExecutorConfiguration> executorConfiguration;
     /// used the automatic rbf alias tag in order to set the mapping
     bool configuredWithAliasTag = false;
   };
@@ -75,29 +119,11 @@ public:
       xml::XMLTag                     &callingTag) override;
 
   /// Returns all configured mappings.
-  const std::vector<ConfiguredMapping> &mappings();
+  std::vector<ConfiguredMapping> &mappings();
+  const std::vector<ConfiguredMapping> &mappings() const;
 
-  // Only relevant for RBF related mappings
-  // Being public here is only required for testing purposes
-  struct RBFConfiguration {
-
-    enum struct SystemSolver {
-      GlobalDirect,
-      GlobalIterative,
-      PUMDirect
-    };
-    SystemSolver        solver{};
-    std::array<bool, 3> deadAxis{};
-    Polynomial          polynomial{};
-    double              solverRtol{};
-    int                 verticesPerCluster{};
-    double              relativeOverlap{};
-    bool                projectToInput{};
-    BasisFunction       basisFunction{};
-    double              supportRadius{};
-    double              shapeParameter{};
-    bool                basisFunctionDefined = false;
-  };
+  /// Instantiates one RBF mapping from its stored configuration.
+  void finishRBFConfiguration(ConfiguredMapping &mapping);
 
   struct GeoMultiscaleConfiguration {
 
@@ -248,21 +274,6 @@ private:
   // which is configured in the subtag
   RBFConfiguration _rbfConfig;
 
-  struct ExecutorConfiguration {
-    enum struct Executor {
-      CPU,
-      CUDA,
-      HIP,
-      SYCL,
-      OpenMP
-    };
-
-    Executor executor = Executor::CPU;
-    int      deviceId{};
-    int      nThreads{};
-    bool     computeEvaluationOffline = true;
-  };
-
   std::unique_ptr<ExecutorConfiguration> _executorConfig;
 
   // Settings for the iterative solvers provided by Ginkgo
@@ -293,7 +304,7 @@ private:
    * Stores additional information about the requested RBF mapping such as the
    * configured polynomial and the solver type, which is not required for all
    * the other mapping types. The information is then used later when instantiating
-   * the RBF mappings in \ref xmlTagCallback().
+   * the RBF mappings for the owning participant.
    */
   RBFConfiguration configureRBFMapping(const std::string &type,
                                        const std::string &polynomial,
@@ -302,8 +313,6 @@ private:
                                        double verticesPerCluster,
                                        double relativeOverlap,
                                        bool   projectToInput) const;
-
-  void finishRBFConfiguration();
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);
