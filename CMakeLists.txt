@@ -666,8 +666,6 @@ set_target_properties(preciceMocked PROPERTIES
   CXX_EXTENSIONS No
 )
 target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
-set_property(TARGET preciceMocked APPEND PROPERTY PUBLIC_HEADER
-    ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
 target_include_directories(preciceMocked PUBLIC
   $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
