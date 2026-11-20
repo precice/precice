@@ -27,8 +27,6 @@
 #include "fmt/format.h"
 #include "fmt/ostream.h"
 
-namespace {
-
 std::string buildMockVersionInformation()
 {
   // Lead with the version number to match real preCICE's format
@@ -83,7 +81,141 @@ std::string toStr(::precice::span<const char> sv)
   return s;
 }
 
-} // namespace
+// Configuration data structures
+struct MeshInfo {
+  std::string name;
+  int         dimensions           = 3;
+  bool        provided             = false;
+  bool        received             = false;
+  bool        requiresConnectivity = false;
+  bool        apiAccess            = false;
+};
+
+struct DataInfo {
+  std::string name;
+  std::string meshName;
+  int         dimensions = 1;
+  bool        isRead     = false;
+  bool        isWrite    = false;
+};
+
+struct ExchangeInfo {
+  std::string dataName;
+  std::string meshName;
+  std::string fromParticipant;
+  bool        initialize = false;
+};
+
+struct MappingInfo {
+  std::string direction; // "read" or "write"
+  std::string type;      // element name, e.g. "nearest-neighbor", "nearest-projection"
+  std::string constraint;
+  std::string fromMesh;
+  std::string toMesh;
+  bool        requiresGradient = false;
+  bool        isJit            = false; // missing from/to attribute
+};
+
+struct ConfigData {
+  std::map<std::string, MeshInfo> meshes;
+  std::vector<DataInfo>           dataItems;
+  std::vector<ExchangeInfo>       exchanges;
+  std::vector<MappingInfo>        mappings;
+  bool                            isImplicitCoupling             = false;
+  bool                            hasConvergenceMeasure          = false;
+  int                             minIterations                  = 1;
+  int                             configMinIterations            = 1;
+  int                             maxIterations                  = 1;
+  int                             configMaxIterations            = 1;     // Stores the value from preCICE config
+  int                             maxIterationsOverride          = 2;     // Default override (2), -1 use config, >0 override
+  bool                            maxIterationsOverrideSpecified = false; // True if mock-config explicitly sets override
+  double                          maxTime                        = -1.0;  // -1 means not set
+  int                             maxTimeWindows                 = -1;    // -1 means not set
+  double                          timeWindowSize                 = -1.0;  // -1 means not set
+  // <time-window-size method="first-participant" />: the solver prescribes the
+  // window size; every advance() completes a time window.
+  bool timeWindowSizeFirstParticipant = false;
+  bool allowsExperimental             = false;
+  bool allowsRemeshing                = false;
+};
+
+// Internal runtime state separated from configuration
+struct RuntimeState {
+  // Iteration/convergence
+  int  currentIteration   = 0;
+  bool iterationConverged = false;
+  // Checkpoint flags
+  bool writeCheckpointRequired = false;
+  bool readCheckpointRequired  = false;
+  // Participant lifecycle
+  bool initialized         = false;
+  bool finalized           = false;
+  bool couplingOngoing     = false;
+  bool timeWindowCompleted = false;
+  // Timekeeping (compensated accumulation like preCICE's TimeHandler)
+  double           timeWindowSize = 0.0; // effective runtime time-window size
+  std::size_t      currentStep    = 0;
+  KahanAccumulator windowStartTime;   // start time of the current window
+  KahanAccumulator windowTime;        // time progressed inside the current window
+  double           currentTime = 0.0; // windowStartTime + windowTime
+  // Direct-access configuration
+  std::map<std::string, std::vector<double>> meshAccessRegions;
+  // Synthetic vertex coordinates handed out for direct-access meshes (whose
+  // vertices come from the partner, not from local setMeshVertices()).
+  std::map<std::string, std::vector<double>> directAccessCoords;
+  // RNG seed
+  uint32_t seed             = 0;
+  bool     mockConfigExists = false;
+  // Initial data
+  bool initialDataRequired  = false;
+  bool initialDataFulfilled = false;
+  // Profiling
+  std::size_t activeProfilingSections = 0;
+  // Mesh lock: meshes are locked after initialize(), unlocked per-mesh by resetMesh()
+  std::set<std::string> lockedMeshes;
+  // Runtime containers
+  // Write buffers keyed by "mesh:data". Reads look up the exact key first, then fall
+  // back to the same data name on another mesh, then to the globally last-written data.
+  std::map<std::string, std::vector<double>> writeBuffers;
+  std::vector<double>                        lastWriteBuffer;
+  std::map<std::string, std::size_t>         meshVertexCounts;
+};
+
+enum class DataMode {
+  Random,      // Mode 1: Random data
+  Buffer,      // Mode 2: Return written data buffer (default)
+  ScaledBuffer // Mode 3: Return written data buffer scaled/multiplied
+};
+
+enum class LoggingMode {
+  Mock,   // Mock-only: minimal logging, only essential mock behavior
+  PrecICE // PrecICE-style: verbose logging mimicking real preCICE
+};
+
+struct MockDataConfig {
+  std::string         dataName;
+  std::string         meshName;
+  DataMode            mode             = DataMode::Buffer; // Default to buffer mode
+  double              scalarMultiplier = 1.0;
+  double              randomLower      = 0.0;
+  double              randomUpper      = 1.0;
+  uint32_t            randomSeed       = 0; // 0 means use default seed from rank
+  std::vector<double> vectorMultiplier;     // Empty means use scalar
+};
+
+struct MockConfig {
+  std::map<std::string, MockDataConfig> dataConfigs; // Key: "meshName:dataName"
+  DataMode                              defaultMode             = DataMode::Buffer;
+  double                                defaultScalarMultiplier = 1.0;
+  double                                defaultRandomLower      = 0.0;
+  double                                defaultRandomUpper      = 1.0;
+  uint32_t                              defaultRandomSeed       = 0;     // 0 means use default seed from rank
+  std::vector<double>                   defaultVectorMultiplier;         // Empty means use scalar
+  LoggingMode                           loggingMode = LoggingMode::Mock; // Default to mock mode
+};
+
+enum class DataType { Scalar = 1,
+                      Vector = 3 };
 
 /*Implementation
   This is the implementation of the precice mock Participant class.
@@ -105,139 +237,6 @@ public:
 
   ~ParticipantImpl() = default;
 
-  // Configuration data structures
-  struct MeshInfo {
-    std::string name;
-    int         dimensions           = 3;
-    bool        provided             = false;
-    bool        received             = false;
-    bool        requiresConnectivity = false;
-    bool        apiAccess            = false;
-  };
-
-  struct DataInfo {
-    std::string name;
-    std::string meshName;
-    int         dimensions = 1;
-    bool        isRead     = false;
-    bool        isWrite    = false;
-  };
-
-  struct ExchangeInfo {
-    std::string dataName;
-    std::string meshName;
-    std::string fromParticipant;
-    bool        initialize = false;
-  };
-
-  struct MappingInfo {
-    std::string direction; // "read" or "write"
-    std::string type;      // element name, e.g. "nearest-neighbor", "nearest-projection"
-    std::string constraint;
-    std::string fromMesh;
-    std::string toMesh;
-    bool        requiresGradient = false;
-    bool        isJit            = false; // missing from/to attribute
-  };
-
-  struct ConfigData {
-    std::map<std::string, MeshInfo> meshes;
-    std::vector<DataInfo>           dataItems;
-    std::vector<ExchangeInfo>       exchanges;
-    std::vector<MappingInfo>        mappings;
-    bool                            isImplicitCoupling             = false;
-    bool                            hasConvergenceMeasure          = false;
-    int                             minIterations                  = 1;
-    int                             configMinIterations            = 1;
-    int                             maxIterations                  = 1;
-    int                             configMaxIterations            = 1;     // Stores the value from preCICE config
-    int                             maxIterationsOverride          = 2;     // Default override (2), -1 use config, >0 override
-    bool                            maxIterationsOverrideSpecified = false; // True if mock-config explicitly sets override
-    double                          maxTime                        = -1.0;  // -1 means not set
-    int                             maxTimeWindows                 = -1;    // -1 means not set
-    double                          timeWindowSize                 = -1.0;  // -1 means not set
-    // <time-window-size method="first-participant" />: the solver prescribes the
-    // window size; every advance() completes a time window.
-    bool timeWindowSizeFirstParticipant = false;
-    bool allowsExperimental             = false;
-    bool allowsRemeshing                = false;
-  };
-
-  // Internal runtime state separated from configuration
-  struct RuntimeState {
-    // Iteration/convergence
-    int  currentIteration   = 0;
-    bool iterationConverged = false;
-    // Checkpoint flags
-    bool writeCheckpointRequired = false;
-    bool readCheckpointRequired  = false;
-    // Participant lifecycle
-    bool initialized         = false;
-    bool finalized           = false;
-    bool couplingOngoing     = false;
-    bool timeWindowCompleted = false;
-    // Timekeeping (compensated accumulation like preCICE's TimeHandler)
-    double           timeWindowSize = 0.0; // effective runtime time-window size
-    std::size_t      currentStep    = 0;
-    KahanAccumulator windowStartTime;   // start time of the current window
-    KahanAccumulator windowTime;        // time progressed inside the current window
-    double           currentTime = 0.0; // windowStartTime + windowTime
-    // Direct-access configuration
-    std::map<std::string, std::vector<double>> meshAccessRegions;
-    // Synthetic vertex coordinates handed out for direct-access meshes (whose
-    // vertices come from the partner, not from local setMeshVertices()).
-    std::map<std::string, std::vector<double>> directAccessCoords;
-    // RNG seed
-    uint32_t seed             = 0;
-    bool     mockConfigExists = false;
-    // Initial data
-    bool initialDataRequired  = false;
-    bool initialDataFulfilled = false;
-    // Profiling
-    std::size_t activeProfilingSections = 0;
-    // Mesh lock: meshes are locked after initialize(), unlocked per-mesh by resetMesh()
-    std::set<std::string> lockedMeshes;
-    // Runtime containers
-    // Write buffers keyed by "mesh:data". Reads look up the exact key first, then fall
-    // back to the same data name on another mesh, then to the globally last-written data.
-    std::map<std::string, std::vector<double>> writeBuffers;
-    std::vector<double>                        lastWriteBuffer;
-    std::map<std::string, std::size_t>         meshVertexCounts;
-  };
-
-  enum class DataMode {
-    Random,      // Mode 1: Random data
-    Buffer,      // Mode 2: Return written data buffer (default)
-    ScaledBuffer // Mode 3: Return written data buffer scaled/multiplied
-  };
-
-  enum class LoggingMode {
-    Mock,   // Mock-only: minimal logging, only essential mock behavior
-    PrecICE // PrecICE-style: verbose logging mimicking real preCICE
-  };
-
-  struct MockDataConfig {
-    std::string         dataName;
-    std::string         meshName;
-    DataMode            mode             = DataMode::Buffer; // Default to buffer mode
-    double              scalarMultiplier = 1.0;
-    double              randomLower      = 0.0;
-    double              randomUpper      = 1.0;
-    uint32_t            randomSeed       = 0; // 0 means use default seed from rank
-    std::vector<double> vectorMultiplier;     // Empty means use scalar
-  };
-
-  struct MockConfig {
-    std::map<std::string, MockDataConfig> dataConfigs; // Key: "meshName:dataName"
-    DataMode                              defaultMode             = DataMode::Buffer;
-    double                                defaultScalarMultiplier = 1.0;
-    double                                defaultRandomLower      = 0.0;
-    double                                defaultRandomUpper      = 1.0;
-    uint32_t                              defaultRandomSeed       = 0;     // 0 means use default seed from rank
-    std::vector<double>                   defaultVectorMultiplier;         // Empty means use scalar
-    LoggingMode                           loggingMode = LoggingMode::Mock; // Default to mock mode
-  };
-
   // Internal state
   std::string participantName;
   // Path to the preCICE configuration file, as passed to the constructor.
@@ -256,9 +255,6 @@ public:
   RuntimeState runtimeState;
 
   MockConfig mockConfig;
-
-  enum class DataType { Scalar = 1,
-                        Vector = 3 };
 
   // SAX parsing state for config
   struct ConfigParseState {
@@ -552,8 +548,8 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
   // and "dimensions" (2 or 3) attributes, so no empty-name guard or dimensions
   // fallback is needed.
   else if (elemName == "mesh") {
-    std::string                     meshName = getAttr("name");
-    impl::ParticipantImpl::MeshInfo meshInfo;
+    std::string meshName = getAttr("name");
+    MeshInfo    meshInfo;
     meshInfo.name                     = meshName;
     meshInfo.dimensions               = std::stoi(getAttr("dimensions"));
     meshInfo.provided                 = attrIsTrue("provide");
@@ -589,7 +585,7 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
       // The config checker guarantees the required "name"/"mesh" attributes and
       // that the referenced mesh exists, so no empty-name guard or mesh-dimension
       // fallback is needed. Vector data has mesh dimensions; scalar data is 1D.
-      impl::ParticipantImpl::DataInfo dataInfo;
+      DataInfo dataInfo;
       dataInfo.name       = getAttr("name");
       dataInfo.meshName   = getAttr("mesh");
       dataInfo.isWrite    = true;
@@ -598,7 +594,7 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
       dataInfo.dimensions = isVector ? impl->configData.meshes.at(dataInfo.meshName).dimensions : 1;
       impl->configData.dataItems.push_back(dataInfo);
     } else if (elemName == "read-data") {
-      impl::ParticipantImpl::DataInfo dataInfo;
+      DataInfo dataInfo;
       dataInfo.name       = getAttr("name");
       dataInfo.meshName   = getAttr("mesh");
       dataInfo.isRead     = true;
@@ -611,7 +607,7 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
   // Handle mapping tags of ALL participants (namespace prefix "mapping"): the
   // connectivity requirement of a mesh may originate from the partner's mapping.
   if (nsPrefix == "mapping") {
-    impl::ParticipantImpl::MappingInfo mi;
+    MappingInfo mi;
     mi.direction        = getAttr("direction");
     mi.type             = elemName;
     mi.constraint       = getAttr("constraint");
@@ -684,7 +680,7 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
     impl->schemeParseState.hasConvergenceMeasure = true;
   } else if (impl->configParseState.inCouplingScheme && elemName == "exchange") {
     // The config checker guarantees the required "data"/"mesh"/"from" attributes.
-    impl::ParticipantImpl::ExchangeInfo ei;
+    ExchangeInfo ei;
     ei.dataName        = getAttr("data");
     ei.meshName        = getAttr("mesh");
     ei.fromParticipant = getAttr("from");
@@ -1482,7 +1478,7 @@ void Participant::advance(double computedTimeStepSize)
   // stay true throughout subcycled steps of the following window).
   _impl->runtimeState.iterationConverged = false;
   auto printCouplingState                = [&]() {
-    if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+    if (_impl->primary && _impl->mockConfig.loggingMode == LoggingMode::PrecICE) {
       std::cout << _impl->logPrefix() << _impl->formatCouplingState() << std::endl;
     }
   };
@@ -1553,7 +1549,7 @@ void Participant::advance(double computedTimeStepSize)
     }
   }
 
-  if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+  if (_impl->primary && _impl->mockConfig.loggingMode == LoggingMode::PrecICE) {
     const std::string prefix = _impl->logPrefix();
     if (_impl->runtimeState.timeWindowCompleted) {
       std::cout << prefix << "Time window completed" << std::endl;
@@ -1578,7 +1574,7 @@ void Participant::finalize()
   // Print finalize message (only on rank 0)
   if (_impl->primary) {
     const std::string prefix = _impl->logPrefix();
-    if (_impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+    if (_impl->mockConfig.loggingMode == LoggingMode::PrecICE) {
       std::cout << prefix << "Finalizing preCICE (mock)" << std::endl;
     } else {
       std::cout << prefix << "Finalized" << std::endl;
