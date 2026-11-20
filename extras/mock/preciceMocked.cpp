@@ -436,7 +436,7 @@ public:
                       precice::span<double> values) const;
 
   // Helper method for XML parsing
-  void parseXMLFile(const std::string &filePath,
+  void parseXMLFile(const std::filesystem::path &filePath,
                     void (*startHandler)(void *, const xmlChar *, const xmlChar *, const xmlChar *, int, const xmlChar **, int, int, const xmlChar **),
                     void (*endHandler)(void *, const xmlChar *, const xmlChar *, const xmlChar *));
 
