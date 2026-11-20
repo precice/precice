@@ -543,9 +543,9 @@ std::vector<std::string> impl::ParticipantImpl::buildInitializeLogMessages() con
   const double             effectiveTimeWindowSize = (configData.timeWindowSize > 0) ? configData.timeWindowSize : 1.0;
 
   if (mockConfig.loggingMode == LoggingMode::PrecICE) {
-    messages.push_back("This is preCICE version 3.3.0 (mock)");
-    messages.push_back("Revision info: mock-implementation");
-    messages.push_back("Build type: Release (mock)");
+    messages.emplace_back("This is preCICE version 3.3.0 (mock)");
+    messages.emplace_back("Revision info: mock-implementation");
+    messages.emplace_back("Build type: Release (mock)");
   }
 
   try {
@@ -595,9 +595,9 @@ std::vector<std::string> impl::ParticipantImpl::buildInitializeLogMessages() con
   }
 
   if (mockConfig.loggingMode == LoggingMode::PrecICE) {
-    messages.push_back("Setting up primary communication to coupling partner/s");
-    messages.push_back("Primary ranks are connected");
-    messages.push_back("Setting up preliminary secondary communication to coupling partner/s");
+    messages.emplace_back("Setting up primary communication to coupling partner/s");
+    messages.emplace_back("Primary ranks are connected");
+    messages.emplace_back("Setting up preliminary secondary communication to coupling partner/s");
 
     for (const auto &meshEntry : configData.meshes) {
       const auto &meshInfo = meshEntry.second;
