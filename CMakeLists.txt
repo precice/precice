@@ -665,6 +665,17 @@ set_target_properties(preciceMocked PROPERTIES
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
 )
+if(PRECICE_HIDE_SYMBOLS)
+  set_target_properties(preciceMocked PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
+  )
+else()
+  set_target_properties(preciceMocked PROPERTIES
+    CXX_VISIBILITY_PRESET default
+    VISIBILITY_INLINES_HIDDEN NO
+  )
+endif()
 target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
 
 target_include_directories(preciceMocked PUBLIC
