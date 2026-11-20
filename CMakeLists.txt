@@ -806,6 +806,16 @@ install(TARGETS precice
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   )
 
+# Install mock
+install(TARGETS preciceMocked
+  EXPORT preciceTargets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
+  )
+
 if(PRECICE_BUILD_TOOLS)
   install(TARGETS precice-tools precice-version precice-config-validate precice-config-doc
     EXPORT preciceTargets
@@ -850,6 +860,7 @@ file(COPY "cmake/preciceConfig.cmake"
 
 # Add an alias to allow subprojects to use the namespaced name
 add_library(precice::precice ALIAS precice)
+add_library(precice::preciceMocked ALIAS preciceMocked)
 
 
 # Set the directory used to prepare files for packaging
