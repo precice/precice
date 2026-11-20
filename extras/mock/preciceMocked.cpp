@@ -302,11 +302,8 @@ public:
     // vertices come from the partner, not from local setMeshVertices()).
     std::map<std::string, std::vector<double>> directAccessCoords;
     // RNG seed
-    uint32_t seed = 0;
-    // Parsing/state flags
-    bool configParsed     = false;
-    bool mockConfigParsed = false;
-    bool mockConfigExists = false;
+    uint32_t seed             = 0;
+    bool     mockConfigExists = false;
     // Initial data
     bool initialDataRequired  = false;
     bool initialDataFulfilled = false;
@@ -916,9 +913,6 @@ void impl::ParticipantImpl::parseXMLFile(const std::string &filePath,
 
 void impl::ParticipantImpl::parseConfig()
 {
-  if (runtimeState.configParsed)
-    return;
-
   try {
     // Parse configuration file
     parseXMLFile(config, onConfigStartElement, onConfigEndElement);
@@ -984,7 +978,6 @@ void impl::ParticipantImpl::parseConfig()
       }
     }
 
-    runtimeState.configParsed = true;
   } catch (const precice::Error &) {
     throw;
   } catch (const std::exception &e) {
@@ -1212,13 +1205,9 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
 
 void impl::ParticipantImpl::parseMockConfig()
 {
-  if (runtimeState.mockConfigParsed)
-    return;
-
   if (!std::filesystem::is_regular_file(mockConfigPath)) {
     // No mock config - use defaults
     mockConfig.defaultMode        = DataMode::Buffer;
-    runtimeState.mockConfigParsed = true;
     runtimeState.mockConfigExists = false;
     return;
   }
@@ -1229,8 +1218,6 @@ void impl::ParticipantImpl::parseMockConfig()
     parseXMLFile(mockConfigPath, onMockStartElement, onMockEndElement);
 
     applyMaxIterationsOverride();
-    runtimeState.mockConfigParsed = true;
-
   } catch (const std::exception &e) {
     throw precice::Error(::fmt::format(
         "{}Warning: Could not parse mock configuration file: {}. Using default buffer mode.",
