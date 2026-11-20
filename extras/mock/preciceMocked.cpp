@@ -361,8 +361,8 @@ public:
   // Kept because it is needed after construction: parseConfig() reads the file,
   // parseMockConfig() derives the mock-config location from it, and log/error
   // messages report its absolute path.
-  std::string                  config;
-  std::string                  mockConfigPath;
+  std::filesystem::path        config;
+  std::filesystem::path        mockConfigPath;
   int                          rank    = 0;
   bool                         primary = false;
   int                          size    = 1;
@@ -498,6 +498,7 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
   // Initialize seed for random data generation 0x9e3779b9u is the fractional part of the golden ratio scaled to 32 bits used as an arbitrary constant
   runtimeState.seed = static_cast<uint32_t>(rank) ^ 0x9e3779b9u;
 
+  mockConfigPath = config.parent_path() / "precice-mock-config.xml";
   parseMockConfig();
   parseConfig();
 }
@@ -924,7 +925,7 @@ void impl::ParticipantImpl::parseConfig()
 
     if (!configParseState.inParticipant && configParseState.participantName.empty()) {
       throw precice::Error(::fmt::format(
-          "Participant '{}' not found in configuration '{}'", participantName, config));
+          "Participant '{}' not found in configuration '{}'", participantName, config.string()));
     }
 
     // Mark each mesh's provided/received role from the data direction. The config
@@ -989,7 +990,7 @@ void impl::ParticipantImpl::parseConfig()
   } catch (const std::exception &e) {
     throw precice::Error(::fmt::format(
         "{}Warning: Could not parse configuration file '{}': {}. Using limited mock behavior.",
-        logPrefix(), config, e.what()));
+        logPrefix(), config.string(), e.what()));
   }
 }
 
@@ -1214,35 +1215,16 @@ void impl::ParticipantImpl::parseMockConfig()
   if (runtimeState.mockConfigParsed)
     return;
 
+  if (!std::filesystem::is_regular_file(mockConfigPath)) {
+    // No mock config - use defaults
+    mockConfig.defaultMode        = DataMode::Buffer;
+    runtimeState.mockConfigParsed = true;
+    runtimeState.mockConfigExists = false;
+    return;
+  }
+
+  runtimeState.mockConfigExists = true;
   try {
-    // Derive mock-config path from precice config path
-    mockConfigPath   = config;
-    size_t lastSlash = mockConfigPath.find_last_of("/\\");
-    size_t lastDot   = mockConfigPath.find_last_of('.');
-
-    if (lastSlash != std::string::npos) {
-      if (lastDot != std::string::npos && lastDot > lastSlash) {
-        mockConfigPath = mockConfigPath.substr(0, lastSlash + 1) + "precice-mock-config.xml";
-      } else {
-        mockConfigPath = mockConfigPath + "/precice-mock-config.xml";
-      }
-    } else {
-      // No directory, same directory as executable
-      mockConfigPath = "mock-config.xml";
-    }
-
-    // Check if mock config file exists
-    std::ifstream mockFile(mockConfigPath);
-    if (!mockFile.good()) {
-      // No mock config - use defaults
-      mockConfig.defaultMode        = DataMode::Buffer;
-      runtimeState.mockConfigParsed = true;
-      runtimeState.mockConfigExists = false;
-      return;
-    }
-    mockFile.close();
-    runtimeState.mockConfigExists = true;
-
     // Parse mock configuration file
     parseXMLFile(mockConfigPath, onMockStartElement, onMockEndElement);
 
