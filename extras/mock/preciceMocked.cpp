@@ -18,6 +18,7 @@
 // The mock re-implements the Participant API and does not link against
 // libprecice. These headers are all it uses from preCICE.
 #include <precice/Exceptions.hpp>
+#include <precice/Participant.hpp>
 #include <precice/Tooling.hpp>
 #include <precice/Types.hpp>
 #include <precice/impl/versions.hpp>
@@ -83,121 +84,6 @@ std::string toStr(::precice::span<const char> sv)
 }
 
 } // namespace
-
-// API declaration
-namespace precice {
-
-// Using definition from Participant.hpp
-// IMPORTANT: Must match the real preCICE definition for ABI compatibility
-// when precice moves to C++20, this can be replaced with std::string_view and std::span and include <string_view> and <span>
-using string_view = ::precice::span<const char>;
-
-// Forward declaration of implementation class to hide implementation details and remove need for a header
-namespace impl {
-class ParticipantImpl;
-}
-
-class Participant {
-public:
-  Participant(::precice::string_view participantName,
-              ::precice::string_view configurationFileName,
-              int                    solverProcessIndex,
-              int                    solverProcessSize);
-
-  Participant(::precice::string_view participantName,
-              ::precice::string_view configurationFileName,
-              int                    solverProcessIndex,
-              int                    solverProcessSize,
-              void                  *communicator);
-
-  ~Participant();
-
-  // Steering methods
-  void initialize();
-  void advance(double computedTimeStepSize);
-  void finalize();
-
-  // Implicit coupling
-  bool requiresWritingCheckpoint();
-  bool requiresReadingCheckpoint();
-
-  // Status queries
-  int    getMeshDimensions(::precice::string_view meshName) const;
-  int    getDataDimensions(::precice::string_view meshName,
-                           ::precice::string_view dataName) const;
-  bool   isCouplingOngoing() const;
-  bool   isTimeWindowComplete() const;
-  double getMaxTimeStepSize() const;
-
-  // Mesh access
-  bool     requiresMeshConnectivityFor(::precice::string_view meshName) const;
-  void     resetMesh(::precice::string_view meshName);
-  VertexID setMeshVertex(::precice::string_view      meshName,
-                         precice::span<const double> position);
-  int      getMeshVertexSize(::precice::string_view meshName) const;
-  void     setMeshVertices(::precice::string_view      meshName,
-                           precice::span<const double> coordinates,
-                           precice::span<VertexID>     ids);
-  void     setMeshEdge(::precice::string_view meshName, VertexID first, VertexID second);
-  void     setMeshEdges(::precice::string_view        meshName,
-                        precice::span<const VertexID> ids);
-  void     setMeshTriangle(::precice::string_view meshName, VertexID first, VertexID second, VertexID third);
-  void     setMeshTriangles(::precice::string_view        meshName,
-                            precice::span<const VertexID> ids);
-  void     setMeshQuad(::precice::string_view meshName, VertexID first, VertexID second, VertexID third, VertexID fourth);
-  void     setMeshQuads(::precice::string_view        meshName,
-                        precice::span<const VertexID> ids);
-  void     setMeshTetrahedron(::precice::string_view meshName, VertexID first, VertexID second, VertexID third, VertexID fourth);
-  void     setMeshTetrahedra(::precice::string_view        meshName,
-                             precice::span<const VertexID> ids);
-
-  // Data access
-  bool requiresInitialData();
-  void writeData(::precice::string_view        meshName,
-                 ::precice::string_view        dataName,
-                 precice::span<const VertexID> ids,
-                 precice::span<const double>   values);
-  void readData(::precice::string_view        meshName,
-                ::precice::string_view        dataName,
-                precice::span<const VertexID> ids,
-                double                        relativeReadTime,
-                precice::span<double>         values) const;
-
-  // Just-in-time mapping (experimental)
-  void writeAndMapData(::precice::string_view      meshName,
-                       ::precice::string_view      dataName,
-                       precice::span<const double> coordinates,
-                       precice::span<const double> values);
-  void mapAndReadData(::precice::string_view      meshName,
-                      ::precice::string_view      dataName,
-                      precice::span<const double> coordinates,
-                      double                      relativeReadTime,
-                      precice::span<double>       values) const;
-
-  // Direct access
-  void setMeshAccessRegion(::precice::string_view      meshName,
-                           precice::span<const double> boundingBox) const;
-  void getMeshVertexIDsAndCoordinates(::precice::string_view  meshName,
-                                      precice::span<VertexID> ids,
-                                      precice::span<double>   coordinates) const;
-
-  // Gradient data (experimental)
-  bool requiresGradientDataFor(::precice::string_view meshName,
-                               ::precice::string_view dataName) const;
-  void writeGradientData(::precice::string_view        meshName,
-                         ::precice::string_view        dataName,
-                         precice::span<const VertexID> ids,
-                         precice::span<const double>   gradients);
-
-  // Profiling
-  void startProfilingSection(::precice::string_view sectionName);
-  void stopLastProfilingSection();
-
-private:
-  std::unique_ptr<impl::ParticipantImpl> _impl;
-};
-
-} // namespace precice
 
 /*Implementation
   This is the implementation of the precice mock Participant class.
