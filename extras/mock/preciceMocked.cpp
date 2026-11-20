@@ -497,6 +497,9 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
   }
   // Initialize seed for random data generation 0x9e3779b9u is the fractional part of the golden ratio scaled to 32 bits used as an arbitrary constant
   runtimeState.seed = static_cast<uint32_t>(rank) ^ 0x9e3779b9u;
+
+  parseMockConfig();
+  parseConfig();
 }
 
 std::string impl::ParticipantImpl::logPrefix() const
@@ -1457,11 +1460,6 @@ Participant::Participant(
                                                     solverProcessSize,
                                                     nullptr))
 {
-  // Parse configuration at construction time so that mesh/data queries
-  // (and bindings) can work before initialize() is called — matching
-  // behavior of the real preCICE library.
-  _impl->parseMockConfig();
-  _impl->parseConfig();
 }
 
 Participant::Participant(
@@ -1470,18 +1468,16 @@ Participant::Participant(
     int                    solverProcessIndex,
     int                    solverProcessSize,
     void                  *communicator)
-    : _impl(std::make_unique<impl::ParticipantImpl>(participantName,
-                                                    configurationFileName,
-                                                    solverProcessIndex,
-                                                    solverProcessSize,
-                                                    communicator))
 {
   if (communicator == nullptr) {
     throw precice::Error("Passing \"nullptr\" as \"communicator\" to Participant constructor is not allowed. "
                          "Please use the Participant constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
   }
-  _impl->parseMockConfig();
-  _impl->parseConfig();
+  _impl = std::make_unique<impl::ParticipantImpl>(participantName,
+                                                  configurationFileName,
+                                                  solverProcessIndex,
+                                                  solverProcessSize,
+                                                  communicator);
 }
 
 Participant::~Participant()
