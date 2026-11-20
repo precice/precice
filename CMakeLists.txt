@@ -614,7 +614,10 @@ add_library(preciceMocked SHARED)
 set_target_properties(preciceMocked PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
-  )
+  CXX_STANDARD ${PRECICE_CXX_STANDARD}
+  CXX_STANDARD_REQUIRED Yes
+  CXX_EXTENSIONS No
+)
 target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
 set_property(TARGET preciceMocked APPEND PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/export.h)
