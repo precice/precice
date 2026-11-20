@@ -676,6 +676,7 @@ target_include_directories(preciceMocked PUBLIC
   )
 
 target_link_libraries(preciceMocked PRIVATE LibXml2::LibXml2 fmtlib-static)
+target_compile_definitions(preciceMocked PRIVATE PRECICE_NO_MPI)
 
 #
 # Configuration of precice tools
