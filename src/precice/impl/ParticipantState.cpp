@@ -123,6 +123,13 @@ void ParticipantState::addWriteMappingContext(
   _writeMappingContexts.push_back(mappingContext);
 }
 
+mapping::Mapping *ParticipantState::addMapping(std::unique_ptr<mapping::Mapping> mapping)
+{
+  PRECICE_ASSERT(mapping);
+  _mappings.push_back(std::move(mapping));
+  return _mappings.back().get();
+}
+
 // Data queries
 const ReadDataContext &ParticipantState::readDataContext(std::string_view mesh, std::string_view data) const
 {
