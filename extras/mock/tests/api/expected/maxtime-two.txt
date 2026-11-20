@@ -1,0 +1,40 @@
+T> getMeshDimensions(MeshTwo)=2
+T> getDataDimensions(write)=2
+T> getDataDimensions(read)=1
+T> requiresMeshConnectivityFor=0
+T> requiresGradientDataFor(write)=0
+T> vertexIDs=0,1,2
+T> getMeshVertexSize=3
+T> requiresInitialData=0
+T> initialize done
+T> isCouplingOngoing=1
+T> isTimeWindowComplete=0
+T> getMaxTimeStepSize=1
+T> requiresWritingCheckpoint=0
+T> loop maxDt=1
+T> V read@0=0.000000,0.000000,0.000000
+T> V read@dt=0.000000,0.000000,0.000000
+T> V wrote=1.000000,1.010000,1.020000,1.030000,1.040000,1.050000
+T> advance(maxDt) ok
+T> requiresReadingCheckpoint=0
+T> isTimeWindowComplete=1
+T> requiresWritingCheckpoint=0
+T> loop maxDt=1
+T> V read@0=1.000000,1.010000,1.020000
+T> V read@dt=1.000000,1.010000,1.020000
+T> V wrote=2.000000,2.010000,2.020000,2.030000,2.040000,2.050000
+T> advance(maxDt) ok
+T> requiresReadingCheckpoint=0
+T> isTimeWindowComplete=1
+T> requiresWritingCheckpoint=0
+T> loop maxDt=0.5
+T> V read@0=2.000000,2.010000,2.020000
+T> V read@dt=2.000000,2.010000,2.020000
+T> V wrote=3.000000,3.010000,3.020000,3.030000,3.040000,3.050000
+T> advance(maxDt) ok
+T> requiresReadingCheckpoint=0
+T> isTimeWindowComplete=1
+T> loop done, steps=3 windows=3
+T> final getMaxTimeStepSize=0
+T> V final read@0=3.000000,3.010000,3.020000
+T> finalize done

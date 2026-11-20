@@ -1,0 +1,15 @@
+T> initialize done
+T> ERR initialize-twice: initialize() may only be called once.
+T> ERR requiresInitialData-afterinit: requiresInitialData() has to be called before initialize().
+T> ERR setMeshVertex-afterinit: This participant attempted to modify the Mesh "MeshOne" while locked. Mesh modification is only allowed before calling initialize().
+T> ERR readData-negative-time: readData(...) cannot sample data before the current time.
+T> ERR readData-beyond-window: readData(...) cannot sample data outside of current time window.
+T> ERR readData-notreadable: Data 'DataOne' on mesh 'MeshOne' is not configured for reading by participant 'SolverOne'. Please add <read-data name="DataOne" mesh="MeshOne" /> to the configuration.
+T> ERR readData-wrongsize: readData() was called with 3 vertices and 7 values for 2-dimensional data 'DataTwo', but needs 6 values (3 x 2).
+T> ERR readData-invalidid: Cannot read data "DataTwo" from mesh "MeshOne" due to invalid Vertex ID at vertices[2]. Please make sure you only use the results from calls to setMeshVertex/Vertices().
+T> advance ok after error probes
+T> finalize done
+T> ERR finalize-twice: finalize() may only be called once.
+T> ERR isCouplingOngoing-afterfinalize: isCouplingOngoing() cannot be called after finalize().
+T> ERR readData-afterfinalize: readData(...) cannot be called after finalize().
+T> ERR advance-afterfinalize: advance() cannot be called after finalize().

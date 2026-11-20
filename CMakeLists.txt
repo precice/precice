@@ -655,6 +655,39 @@ set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
 #
+# Mocked interface
+#
+add_library(preciceMocked SHARED)
+set_target_properties(preciceMocked PROPERTIES
+  VERSION ${preCICE_VERSION}
+  SOVERSION ${preCICE_SOVERSION}
+  CXX_STANDARD ${PRECICE_CXX_STANDARD}
+  CXX_STANDARD_REQUIRED Yes
+  CXX_EXTENSIONS No
+)
+if(PRECICE_HIDE_SYMBOLS)
+  set_target_properties(preciceMocked PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
+  )
+else()
+  set_target_properties(preciceMocked PROPERTIES
+    CXX_VISIBILITY_PRESET default
+    VISIBILITY_INLINES_HIDDEN NO
+  )
+endif()
+target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
+
+target_include_directories(preciceMocked PUBLIC
+  $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
+  $<INSTALL_INTERFACE:include>
+  )
+
+target_link_libraries(preciceMocked PRIVATE LibXml2::LibXml2 fmtlib-static)
+target_compile_definitions(preciceMocked PRIVATE PRECICE_NO_MPI)
+
+#
 # Configuration of precice tools
 #
 if (PRECICE_BUILD_TOOLS)
@@ -783,6 +816,16 @@ install(TARGETS precice
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   )
 
+# Install mock
+install(TARGETS preciceMocked
+  EXPORT preciceTargets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
+  )
+
 if(PRECICE_BUILD_TOOLS)
   install(TARGETS precice-tools precice-version precice-config-validate precice-config-doc
     EXPORT preciceTargets
@@ -827,6 +870,7 @@ file(COPY "cmake/preciceConfig.cmake"
 
 # Add an alias to allow subprojects to use the namespaced name
 add_library(precice::precice ALIAS precice)
+add_library(precice::preciceMocked ALIAS preciceMocked)
 
 
 # Set the directory used to prepare files for packaging
@@ -902,6 +946,12 @@ if (BUILD_TESTING)
   print_section("TESTS")
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
+
+  #
+  # Golden tests for the mocked interface
+  #
+
+  include(${CMAKE_CURRENT_LIST_DIR}/extras/mock/tests/api/tests.cmake)
 
   #
   # Add test_install
