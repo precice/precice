@@ -149,6 +149,73 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     )
 endfunction(add_precice_test_run_solverdummies)
 
+function(add_precice_test_run_mocked_solverdummy PAT_LANG)
+  # Turn languages to lowercase
+  string(TOLOWER ${PAT_LANG} PAT_LANG)
+
+  # We always prefix our tests
+  set(PAT_NAME "solverdummy.run_mocked.${PAT_LANG}")
+  set(PAT_FULL_NAME "precice.${PAT_NAME}")
+
+  # Not supported on windows
+  if(WIN32)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+  endif()
+
+  # Make sure all required compilers are available
+  if(PAT_LANG STREQUAL "fortran")
+    if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_BINDINGS_FORTRAN)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+    endif()
+  elseif(PAT_LANG STREQUAL "c")
+    if(NOT CMAKE_C_COMPILER OR NOT PRECICE_BINDINGS_C)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+    endif()
+  endif()
+
+  # Locate the solverdummy config
+  set(PAT_CONFIG "${preCICE_SOURCE_DIR}/examples/solverdummies/precice-config.xml")
+  if(NOT EXISTS ${PAT_CONFIG})
+    message(FATAL_ERROR "CMake was unable to locate the solverdummy config!")
+  endif()
+
+  # Locate binary dir of solverdummy
+  set(PAT_BIN_DIR "${PRECICE_SOLVERDUMMY_DIR}/${PAT_LANG}")
+  if(NOT IS_DIRECTORY ${PAT_BIN_DIR})
+    message(FATAL_ERROR "There is no configured solverdummy for language ${PAT_LANG}!")
+  endif()
+
+  # Generate run directory
+  set(PAT_RUN_DIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
+  file(MAKE_DIRECTORY "${PAT_RUN_DIR}")
+
+  # Add the actual test
+  message(STATUS "Test ${PAT_FULL_NAME}")
+  add_test(NAME ${PAT_FULL_NAME} COMMAND ${PAT_BIN_DIR}/solverdummy ${PAT_CONFIG} SolverOne)
+
+  # Setting properties
+  set_tests_properties(${PAT_FULL_NAME}
+    PROPERTIES
+    WORKING_DIRECTORY "${PAT_RUN_DIR}"
+    FIXTURES_REQUIRED "${PAT_LANG}-solverdummy"
+    LABELS "solverdummy;mock"
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+    )
+
+    # Preload the mock
+    if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
+      set_tests_properties(${PAT_FULL_NAME} PROPERTIES
+        ENVIRONMENT "DYLD_INSERT_LIBRARIES=$<TARGET_FILE:preciceMocked>;DYLD_FORCE_FLAT_NAMESPACE=1")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL Linux)
+      set_tests_properties(${PAT_FULL_NAME} PROPERTIES
+        ENVIRONMENT "LD_PRELOAD=$<TARGET_FILE:preciceMocked>")
+    endif()
+
+endfunction(add_precice_test_run_mocked_solverdummy)
+
 
 enable_testing()
 
@@ -204,6 +271,10 @@ add_custom_target(precice-test-list ALL
 add_precice_test_build_solverdummy(cpp)
 add_precice_test_build_solverdummy(c)
 add_precice_test_build_solverdummy(fortran)
+
+add_precice_test_run_mocked_solverdummy(cpp)
+add_precice_test_run_mocked_solverdummy(c)
+add_precice_test_run_mocked_solverdummy(fortran)
 
 add_precice_test_run_solverdummies(cpp cpp)
 add_precice_test_run_solverdummies(c c)
