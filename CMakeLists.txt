@@ -675,7 +675,7 @@ target_include_directories(preciceMocked PUBLIC
   $<INSTALL_INTERFACE:include>
   )
 
-target_link_libraries(preciceMocked PUBLIC LibXml2::LibXml2 fmtlib-static)
+target_link_libraries(preciceMocked PRIVATE LibXml2::LibXml2 fmtlib-static)
 
 #
 # Configuration of precice tools
