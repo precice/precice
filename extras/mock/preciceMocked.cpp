@@ -880,7 +880,7 @@ void impl::ParticipantImpl::mergeCouplingScheme()
 }
 
 // Helper method to parse XML files using SAX
-void impl::ParticipantImpl::parseXMLFile(const std::string &filePath,
+void impl::ParticipantImpl::parseXMLFile(const std::filesystem::path &filePath,
                                          void (*startHandler)(void *, const xmlChar *, const xmlChar *, const xmlChar *, int, const xmlChar **, int, int, const xmlChar **),
                                          void (*endHandler)(void *, const xmlChar *, const xmlChar *, const xmlChar *))
 {
@@ -895,12 +895,12 @@ void impl::ParticipantImpl::parseXMLFile(const std::string &filePath,
   std::ifstream ifs(filePath);
   if (!ifs) {
     throw precice::Error(::fmt::format(
-        "Could not open configuration file '{}'", filePath));
+        "Could not open configuration file '{}'", filePath.string()));
   }
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
   if (content.empty()) {
     throw precice::Error(::fmt::format(
-        "Configuration file '{}' is empty", filePath));
+        "Configuration file '{}' is empty", filePath.string()));
   }
 
   // Parse using SAX
