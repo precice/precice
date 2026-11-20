@@ -158,10 +158,16 @@ function(add_precice_test_run_mocked_solverdummy PAT_LANG)
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
   # Not supported on windows
-  if(WIN32)
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL Linux)
       message(STATUS "Test ${PAT_FULL_NAME} - skipped")
       return()
   endif()
+  # In MacOS, the application needs to be copied and the rpath changed
+  # otool -L solverdummy
+  # install_name_tool -change @rpath/libprecice.3.dylib @rpath/libpreciceMocked.3.dylib solverdummy
+  # otool -L solverdummy # verify
+  # In some instances, the executable needs to be resigned
+  # signcode -f -s - solverdummy
 
   # Make sure all required compilers are available
   if(PAT_LANG STREQUAL "fortran")
@@ -203,16 +209,8 @@ function(add_precice_test_run_mocked_solverdummy PAT_LANG)
     FIXTURES_REQUIRED "${PAT_LANG}-solverdummy"
     LABELS "solverdummy;mock"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+    ENVIRONMENT "LD_PRELOAD=$<TARGET_FILE:preciceMocked>"
     )
-
-    # Preload the mock
-    if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
-      set_tests_properties(${PAT_FULL_NAME} PROPERTIES
-        ENVIRONMENT "DYLD_INSERT_LIBRARIES=$<TARGET_FILE:preciceMocked>;DYLD_FORCE_FLAT_NAMESPACE=1")
-    elseif(CMAKE_SYSTEM_NAME STREQUAL Linux)
-      set_tests_properties(${PAT_FULL_NAME} PROPERTIES
-        ENVIRONMENT "LD_PRELOAD=$<TARGET_FILE:preciceMocked>")
-    endif()
 
 endfunction(add_precice_test_run_mocked_solverdummy)
 
