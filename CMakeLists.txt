@@ -608,38 +608,6 @@ target_include_directories(precice PUBLIC
 
 target_link_libraries(precice PRIVATE preciceCore)
 
-# Mocked interface
-
-add_library(preciceMocked SHARED)
-set_target_properties(preciceMocked PROPERTIES
-  VERSION ${preCICE_VERSION}
-  SOVERSION ${preCICE_SOVERSION}
-  CXX_STANDARD ${PRECICE_CXX_STANDARD}
-  CXX_STANDARD_REQUIRED Yes
-  CXX_EXTENSIONS No
-)
-target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
-set_property(TARGET preciceMocked APPEND PROPERTY PUBLIC_HEADER
-    ${PROJECT_BINARY_DIR}/src/precice/export.h)
-
-target_include_directories(preciceMocked PUBLIC
-  $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
-  $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
-  $<INSTALL_INTERFACE:include>
-  )
-
-target_link_libraries(preciceMocked PUBLIC Eigen3::Eigen)
-target_compile_definitions(preciceMocked PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
-target_link_libraries(preciceMocked PUBLIC LibXml2::LibXml2)
-target_link_libraries(preciceMocked PUBLIC fmtlib-static)
-
-
-if (PRECICE_FEATURE_MPI_COMMUNICATION)
-  target_link_libraries(preciceMocked PUBLIC MPI::MPI_CXX)
-else()
-  target_compile_definitions(preciceMocked PUBLIC PRECICE_NO_MPI)
-endif()
-
 # Sources Configuration
 include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 
@@ -685,6 +653,40 @@ target_compile_definitions(preciceCore PUBLIC preciceCore_EXPORTS)
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/export.h)
+
+#
+# Mocked interface
+#
+add_library(preciceMocked SHARED)
+set_target_properties(preciceMocked PROPERTIES
+  VERSION ${preCICE_VERSION}
+  SOVERSION ${preCICE_SOVERSION}
+  CXX_STANDARD ${PRECICE_CXX_STANDARD}
+  CXX_STANDARD_REQUIRED Yes
+  CXX_EXTENSIONS No
+)
+target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
+set_property(TARGET preciceMocked APPEND PROPERTY PUBLIC_HEADER
+    ${PROJECT_BINARY_DIR}/src/precice/export.h)
+
+target_include_directories(preciceMocked PUBLIC
+  $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
+  $<INSTALL_INTERFACE:include>
+  )
+
+target_link_libraries(preciceMocked PUBLIC Eigen3::Eigen)
+target_compile_definitions(preciceMocked PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
+target_link_libraries(preciceMocked PUBLIC LibXml2::LibXml2)
+target_link_libraries(preciceMocked PUBLIC fmtlib-static)
+
+
+if (PRECICE_FEATURE_MPI_COMMUNICATION)
+  target_link_libraries(preciceMocked PUBLIC MPI::MPI_CXX)
+else()
+  target_compile_definitions(preciceMocked PUBLIC PRECICE_NO_MPI)
+endif()
+
 
 #
 # Configuration of precice tools
