@@ -156,4 +156,7 @@ std::optional<std::size_t> locateInvalidVertexID(const Mesh &mesh, const Contain
 /// Given a Mesh and a bounding box, counts all vertices within the bounding box
 std::size_t countVerticesInBoundingBox(mesh::PtrMesh mesh, const mesh::BoundingBox &bb);
 
+/// Returns the coordinates shared by more than one vertex of the mesh, each location listed once
+std::vector<Eigen::VectorXd> findDuplicateVertexCoords(const Mesh &mesh);
+
 } // namespace precice::mesh

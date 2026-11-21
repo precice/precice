@@ -1,4 +1,6 @@
 #include <Eigen/Core>
+#include <algorithm>
+#include <cmath>
 #include <mesh/Edge.hpp>
 #include <mesh/Mesh.hpp>
 #include <mesh/Utils.hpp>
@@ -72,6 +74,29 @@ Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const Eigen::VectorXd &inpu
 std::size_t countVerticesInBoundingBox(mesh::PtrMesh mesh, const mesh::BoundingBox &bb)
 {
   return std::count_if(mesh->vertices().cbegin(), mesh->vertices().cend(), [&bb](const auto &v) { return bb.contains(v); });
+}
+
+std::vector<Eigen::VectorXd> findDuplicateVertexCoords(const Mesh &mesh)
+{
+  // shortcut: exact coordinate match only, vertices closer than a tolerance are not reported
+  std::vector<Vertex::RawCoords> coords;
+  coords.reserve(mesh.nVertices());
+  for (const auto &v : mesh.vertices()) {
+    // NaN breaks the strict weak ordering std::sort requires, and such vertices are no meaningful duplicates
+    if (std::all_of(v.rawCoords().begin(), v.rawCoords().end(), [](double c) { return std::isfinite(c); })) {
+      coords.push_back(v.rawCoords());
+    }
+  }
+  std::sort(coords.begin(), coords.end());
+
+  std::vector<Eigen::VectorXd> duplicates;
+  for (auto it = std::adjacent_find(coords.begin(), coords.end()); it != coords.end();
+       it      = std::adjacent_find(it, coords.end())) {
+    const auto duplicate = *it;
+    duplicates.emplace_back(Eigen::Map<const Eigen::VectorXd>(duplicate.data(), mesh.getDimensions()));
+    it = std::find_if(it, coords.end(), [&duplicate](const auto &c) { return c != duplicate; });
+  }
+  return duplicates;
 }
 
 } // namespace precice::mesh
