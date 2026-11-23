@@ -665,6 +665,8 @@ set_target_properties(preciceMocked PROPERTIES
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
 )
+# Workaround for making exports work for the mocked preCICE library when building preCICE as a shared library
+target_compile_definitions(preciceMocked PUBLIC preciceCore_EXPORTS)
 if(PRECICE_HIDE_SYMBOLS)
   set_target_properties(preciceMocked PROPERTIES
     CXX_VISIBILITY_PRESET hidden
