@@ -1,13 +1,11 @@
 extern "C" {
 #include "precice/preciceC.h"
 }
+#include <iostream>
 #include <memory>
 #include <string>
-#include "logging/LogMacros.hpp"
-#include "logging/Logger.hpp"
 #include "precice/impl/versions.hpp"
 #include "precice/precice.hpp"
-#include "utils/assertion.hpp"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -18,12 +16,29 @@ extern "C" {
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+namespace precice::bindings::c {
+
 static std::unique_ptr<precice::Participant> impl = nullptr;
 
-static precice::logging::Logger _log("precicec");
+void ensureNotConstructed()
+{
+  if (impl != nullptr) {
+    std::cerr << "ERROR: The participant has already been created. Be sure to call \"precicec_finalize\" first.\n";
+    std::abort();
+  }
+}
 
-static std::string errormsg       = "preCICE has not been created properly. Be sure to call \"precicec_createParticipant\" or \"precicec_createParticipant_withCommunicator\" before any other call to preCICE.";
-static std::string errormsgCreate = "preCICE has been created already! Be sure to call either \"precicec_createParticipant\" or \"precicec_createParticipant_withCommunicator\" exactly once.";
+void ensureConstructed()
+{
+  if (impl == nullptr) {
+    std::cerr << "ERROR: The participant has not yet been created. Be sure to call \"precicec_createParticipant\" or \"precicec_createParticipant_withCommunicator\" first.\n";
+    std::abort();
+  }
+}
+
+} // namespace precice::bindings::c
+
+using namespace precice::bindings::c;
 
 void precicec_createParticipant_withCommunicator(
     const char *participantName,
@@ -32,7 +47,7 @@ void precicec_createParticipant_withCommunicator(
     int         solverProcessSize,
     void       *communicator)
 try {
-  PRECICE_CHECK(impl == nullptr, errormsgCreate);
+  ensureNotConstructed();
   impl = std::make_unique<precice::Participant>(participantName,
                                                 configFileName,
                                                 solverProcessIndex,
@@ -48,7 +63,7 @@ void precicec_createParticipant(
     int         solverProcessIndex,
     int         solverProcessSize)
 try {
-  PRECICE_CHECK(impl == nullptr, errormsgCreate);
+  ensureNotConstructed();
   impl = std::make_unique<precice::Participant>(participantName,
                                                 configFileName,
                                                 solverProcessIndex,
@@ -59,7 +74,7 @@ try {
 
 void precicec_initialize()
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   impl->initialize();
 } catch (::precice::Error &e) {
   std::abort();
@@ -67,7 +82,7 @@ try {
 
 void precicec_advance(double computedTimeStepSize)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   impl->advance(computedTimeStepSize);
 } catch (::precice::Error &e) {
   std::abort();
@@ -75,7 +90,7 @@ try {
 
 void precicec_finalize()
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   impl->finalize();
   impl.reset();
 } catch (::precice::Error &e) {
@@ -84,7 +99,7 @@ try {
 
 int precicec_getMeshDimensions(const char *meshName)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   return impl->getMeshDimensions(meshName);
 } catch (::precice::Error &e) {
   std::abort();
@@ -93,7 +108,7 @@ try {
 
 int precicec_getDataDimensions(const char *meshName, const char *dataName)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   return impl->getDataDimensions(meshName, dataName);
 } catch (::precice::Error &e) {
   std::abort();
@@ -102,7 +117,7 @@ try {
 
 int precicec_isCouplingOngoing()
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   if (impl->isCouplingOngoing()) {
     return 1;
   }
@@ -114,7 +129,7 @@ try {
 
 int precicec_isTimeWindowComplete()
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   if (impl->isTimeWindowComplete()) {
     return 1;
   }
@@ -134,7 +149,7 @@ try {
 
 int precicec_requiresInitialData()
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   return impl->requiresInitialData() ? 1 : 0;
 } catch (::precice::Error &e) {
   std::abort();
@@ -143,7 +158,7 @@ try {
 
 int precicec_requiresWritingCheckpoint()
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   return impl->requiresWritingCheckpoint() ? 1 : 0;
 } catch (::precice::Error &e) {
   std::abort();
@@ -152,7 +167,7 @@ try {
 
 int precicec_requiresReadingCheckpoint()
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   return impl->requiresReadingCheckpoint() ? 1 : 0;
 } catch (::precice::Error &e) {
   std::abort();
@@ -161,7 +176,7 @@ try {
 
 int precicec_requiresMeshConnectivityFor(const char *meshName)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   if (impl->requiresMeshConnectivityFor(meshName)) {
     return 1;
   }
@@ -173,7 +188,7 @@ try {
 
 void precicec_resetMesh(const char *meshName)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   impl->resetMesh(meshName);
 } catch (::precice::Error &e) {
   std::abort();
@@ -183,7 +198,7 @@ int precicec_setMeshVertex(
     const char   *meshName,
     const double *position)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto size = static_cast<long unsigned>(impl->getMeshDimensions(meshName));
   return impl->setMeshVertex(meshName, {position, size});
 } catch (::precice::Error &e) {
@@ -197,7 +212,7 @@ void precicec_setMeshVertices(
     const double *positions,
     int          *ids)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto idsSize = static_cast<long unsigned>(size);
   auto posSize = static_cast<long unsigned>(impl->getMeshDimensions(meshName) * size);
   impl->setMeshVertices(meshName, {positions, posSize}, {ids, idsSize});
@@ -208,7 +223,7 @@ try {
 int precicec_getMeshVertexSize(
     const char *meshName)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   return impl->getMeshVertexSize(meshName);
 } catch (::precice::Error &e) {
   std::abort();
@@ -220,7 +235,7 @@ void precicec_setMeshEdge(
     int         firstVertexID,
     int         secondVertexID)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   impl->setMeshEdge(meshName, firstVertexID, secondVertexID);
 } catch (::precice::Error &e) {
   std::abort();
@@ -231,7 +246,7 @@ void precicec_setMeshEdges(
     int         size,
     const int  *vertices)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto verticesSize = static_cast<long unsigned>(size) * 2;
   impl->setMeshEdges(meshName, {vertices, verticesSize});
 } catch (::precice::Error &e) {
@@ -244,7 +259,7 @@ void precicec_setMeshTriangle(
     int         secondVertexID,
     int         thirdVertexID)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   impl->setMeshTriangle(meshName, firstVertexID, secondVertexID, thirdVertexID);
 } catch (::precice::Error &e) {
   std::abort();
@@ -255,7 +270,7 @@ void precicec_setMeshTriangles(
     int         size,
     const int  *vertices)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto verticesSize = static_cast<long unsigned>(size) * 3;
   impl->setMeshTriangles(meshName, {vertices, verticesSize});
 } catch (::precice::Error &e) {
@@ -269,7 +284,7 @@ void precicec_setMeshQuad(
     int         thirdVertexID,
     int         fourthVertexID)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   impl->setMeshQuad(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
 } catch (::precice::Error &e) {
   std::abort();
@@ -280,7 +295,7 @@ void precicec_setMeshQuads(
     int         size,
     const int  *vertices)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto verticesSize = static_cast<long unsigned>(size) * 4;
   impl->setMeshQuads(meshName, {vertices, verticesSize});
 } catch (::precice::Error &e) {
@@ -294,7 +309,7 @@ void precicec_setMeshTetrahedron(
     int         thirdVertexID,
     int         fourthVertexID)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   impl->setMeshTetrahedron(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
 } catch (::precice::Error &e) {
   std::abort();
@@ -305,7 +320,7 @@ void precicec_setMeshTetrahedra(
     int         size,
     const int  *vertices)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto verticesSize = static_cast<long unsigned>(size) * 4;
   impl->setMeshTetrahedra(meshName, {vertices, verticesSize});
 } catch (::precice::Error &e) {
@@ -319,7 +334,7 @@ void precicec_writeData(
     const int    *valueIndices,
     const double *values)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto dataSize = size * impl->getDataDimensions(meshName, dataName);
   impl->writeData(meshName, dataName, {valueIndices, static_cast<unsigned long>(size)}, {values, static_cast<unsigned long>(dataSize)});
 } catch (::precice::Error &e) {
@@ -334,7 +349,7 @@ void precicec_readData(
     double      relativeReadTime,
     double     *values)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto dataSize = size * impl->getDataDimensions(meshName, dataName);
   impl->readData(meshName, dataName, {valueIndices, static_cast<unsigned long>(size)}, relativeReadTime, {values, static_cast<unsigned long>(dataSize)});
 } catch (::precice::Error &e) {
@@ -348,7 +363,7 @@ void precicec_writeAndMapData(
     const double *coordinates,
     const double *values)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto coordinatesSize = size * impl->getMeshDimensions(meshName);
   auto dataSize        = size * impl->getDataDimensions(meshName, dataName);
   impl->writeAndMapData(meshName, dataName, {coordinates, static_cast<unsigned long>(coordinatesSize)}, {values, static_cast<unsigned long>(dataSize)});
@@ -364,7 +379,7 @@ void precicec_mapAndReadData(
     double        relativeReadTime,
     double       *values)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto coordinatesSize = size * impl->getMeshDimensions(meshName);
   auto dataSize        = size * impl->getDataDimensions(meshName, dataName);
   impl->mapAndReadData(meshName, dataName, {coordinates, static_cast<unsigned long>(coordinatesSize)}, relativeReadTime, {values, static_cast<unsigned long>(dataSize)});
@@ -375,7 +390,7 @@ try {
 int precicec_requiresGradientDataFor(const char *meshName,
                                      const char *dataName)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   if (impl->requiresGradientDataFor(meshName, dataName)) {
     return 1;
   }
@@ -392,7 +407,7 @@ void precicec_writeGradientData(
     const int    *valueIndices,
     const double *gradients)
 try {
-  PRECICE_CHECK(impl != nullptr, errormsg);
+  ensureConstructed();
   auto gradientComponents = impl->getDataDimensions(meshName, dataName) * impl->getMeshDimensions(meshName);
   auto gradientSize       = size * gradientComponents;
   impl->writeGradientData(meshName, dataName, {valueIndices, static_cast<unsigned long>(size)}, {gradients, static_cast<unsigned long>(gradientSize)});
