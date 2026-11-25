@@ -21,7 +21,7 @@ CONFIG="$TESTS_DIR/$CFGDIR/precice-config.xml"
 EXPECTED="$TESTS_DIR/expected/$NAME.txt"
 
 tmp=$(mktemp) || exit 1
-trap 'rm -f "$tmp" "$tmp.filtered"' EXIT
+trap 'rm -f "$tmp"' EXIT
 
 "$DRIVER" "$PART" "$CONFIG" "$@" > "$tmp" 2>&1
 rc=$?
@@ -33,11 +33,11 @@ fi
 
 # Only the T> lines are the test contract; normalize the config path, which
 # appears in some error messages.
-grep "^T> " "$tmp" | sed "s|$CONFIG|<CONFIG>|g" > "$tmp.filtered"
+sed -i -e '/^T> /!d' -e "s|$CONFIG|<CONFIG>|g" "$tmp"
 
 if [ "${UPDATE_EXPECTED:-0}" = "1" ]; then
     mkdir -p "$(dirname "$EXPECTED")"
-    cp "$tmp.filtered" "$EXPECTED"
+    cp "$tmp" "$EXPECTED"
     echo "updated $EXPECTED"
     exit 0
 fi
@@ -48,7 +48,7 @@ if [ ! -f "$EXPECTED" ]; then
     exit 1
 fi
 
-if ! diff -u "$EXPECTED" "$tmp.filtered"; then
+if ! diff -u "$EXPECTED" "$tmp"; then
     echo "Mock behavior differs from expected output ($NAME)" >&2
     exit 1
 fi
