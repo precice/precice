@@ -678,7 +678,9 @@ else()
     VISIBILITY_INLINES_HIDDEN NO
   )
 endif()
-target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
+target_sources(preciceMocked PRIVATE
+  extras/mock/preciceMocked.cpp
+  ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp)
 
 target_include_directories(preciceMocked PUBLIC
   $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
@@ -688,6 +690,7 @@ target_include_directories(preciceMocked PUBLIC
 
 target_link_libraries(preciceMocked PRIVATE LibXml2::LibXml2 fmtlib-static)
 target_compile_definitions(preciceMocked PRIVATE PRECICE_NO_MPI)
+add_dependencies(preciceMocked GitRevision) # ensure the version.cpp exists
 
 #
 # Configuration of precice tools

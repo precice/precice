@@ -27,25 +27,6 @@
 #include "fmt/format.h"
 #include "fmt/ostream.h"
 
-std::string buildMockVersionInformation()
-{
-  // Lead with the version number to match real preCICE's format
-  // (<version>;...). Tools such as the FMI runner parse the first character to
-  // detect the major version, so a "precice-mock" prefix breaks them.
-  std::string info = PRECICE_VERSION ";precice-mock";
-#ifdef __VERSION__
-  info += ";compiler=";
-  info += __VERSION__;
-#endif
-#if defined(__cplusplus)
-  info += ";cxx=";
-  info += std::to_string(static_cast<long long>(__cplusplus));
-#endif
-  return info;
-}
-
-const std::string mockVersionInformation = buildMockVersionInformation();
-
 // Tolerance used for time comparisons, matching preCICE's math::NUMERICAL_ZERO_DIFFERENCE.
 // Like real preCICE (DoubleAggregator), the mock uses compensated summation for time
 // accumulation, so the same tight tolerance is safe even with heavy subcycling.
@@ -425,9 +406,15 @@ std::vector<std::string> impl::ParticipantImpl::buildInitializeLogMessages() con
   const double             effectiveTimeWindowSize = (configData.timeWindowSize > 0) ? configData.timeWindowSize : 1.0;
 
   if (mockConfig.loggingMode == LoggingMode::PrecICE) {
-    messages.emplace_back("This is preCICE version 3.3.0 (mock)");
-    messages.emplace_back("Revision info: mock-implementation");
-    messages.emplace_back("Build type: Release (mock)");
+    messages.emplace_back("This is preCICE version " PRECICE_VERSION " (mock)");
+    messages.emplace_back(std::string("Revision info: ") + precice::preciceRevision);
+    messages.emplace_back("Build type: "
+#ifndef NDEBUG
+                          "Debug"
+#else
+                          "Release"
+#endif
+    );
   }
 
   try {
@@ -2664,10 +2651,6 @@ void Participant::stopLastProfilingSection()
   --_impl->runtimeState.activeProfilingSections;
 }
 
-// Missing Symbols
-
-extern char const *const versionInformation __attribute__((visibility("default"))) = mockVersionInformation.c_str(); // Tooling API
-
 namespace tooling {
 
 void printConfigReference(std::ostream &out, ConfigReferenceType reftype)
@@ -2686,7 +2669,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
 
 std::string getVersionInformation()
 {
-  return mockVersionInformation;
+  return std::string(precice::versionInformation).append(";MOCKED=Y");
 }
 
 } // namespace precice
