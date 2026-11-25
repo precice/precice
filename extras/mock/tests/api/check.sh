@@ -8,7 +8,7 @@
 #
 # usage:  check.sh <driver> <tests-dir> <name> <participant> <cfg-dir> <scenario...>
 # Set UPDATE_EXPECTED=1 to (re)generate the expected file instead of comparing.
-set -u
+set -ue
 
 DRIVER="$1"
 TESTS_DIR="$2"
