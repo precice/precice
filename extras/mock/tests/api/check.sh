@@ -21,7 +21,6 @@ CONFIG="$TESTS_DIR/$CFGDIR/precice-config.xml"
 EXPECTED="$TESTS_DIR/expected/$NAME.txt"
 
 tmp=$(mktemp) || exit 1
-trap 'rm -f "$tmp"' EXIT
 
 "$DRIVER" "$PART" "$CONFIG" "$@" > "$tmp" 2>&1
 rc=$?
