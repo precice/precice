@@ -16,6 +16,8 @@ set_target_properties(preciceMockedTestDriver PROPERTIES
   )
 
 set(PRECICE_MOCK_TEST_DIR ${CMAKE_CURRENT_LIST_DIR})
+set(PRECICE_MOCK_BIN_DIR ${PROJECT_BINARY_DIR}/TestOutput/Mock)
+file(MAKE_DIRECTORY "${PRECICE_MOCK_BIN_DIR}")
 
 function(precice_add_mock_test name participant cfgdir)
   add_test(NAME precice.mock.${name}
@@ -25,6 +27,7 @@ function(precice_add_mock_test name participant cfgdir)
       ${name} ${participant} ${cfgdir} ${ARGN}
     )
   set_tests_properties(precice.mock.${name} PROPERTIES
+    WORKING_DIRECTORY "${PRECICE_MOCK_BIN_DIR}"
     LABELS "mock"
     TIMEOUT 60
     )

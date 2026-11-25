@@ -15,12 +15,13 @@ TESTS_DIR="$2"
 NAME="$3"
 PART="$4"
 CFGDIR="$5"
+tmp=$( echo "$*" | sha256sum | cut -d' ' -f1 )
+echo "TMP: $(pwd)/$tmp"
+rm -f "$tmp"
 shift 5
 
 CONFIG="$TESTS_DIR/$CFGDIR/precice-config.xml"
 EXPECTED="$TESTS_DIR/expected/$NAME.txt"
-
-tmp=$(mktemp) || exit 1
 
 "$DRIVER" "$PART" "$CONFIG" "$@" > "$tmp" 2>&1
 rc=$?
