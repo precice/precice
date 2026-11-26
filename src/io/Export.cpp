@@ -36,9 +36,9 @@ void Export::writeSeriesFile(std::string_view filename) const
   outFile << R"({ "file-series-version" : "1.0", "files" : [)";
 
   for (std::size_t i = 0; i < _records.size() - 1; ++i) {
-    outFile << fmt::format(R"( {{ "name" : "{}", "time" : {} }},)", _records[i].filename, _records[i].time);
+    outFile << precice::fmt::format(R"( {{ "name" : "{}", "time" : {} }},)", _records[i].filename, _records[i].time);
   }
-  outFile << fmt::format(R"( {{ "name" : "{}", "time" : {} }} ] }})", _records.back().filename, _records.back().time);
+  outFile << precice::fmt::format(R"( {{ "name" : "{}", "time" : {} }} ] }})", _records.back().filename, _records.back().time);
 }
 
 void Export::recordExport(std::string filename, double time)

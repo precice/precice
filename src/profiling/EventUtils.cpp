@@ -137,7 +137,7 @@ void EventRegistry::startBackend()
       std::filesystem::create_directories(_directory);
     }
   }
-  auto filename = fmt::format("{}/{}-{}-{}.txt", _directory, _applicationName, _rank, _size);
+  auto filename = precice::fmt::format("{}/{}-{}-{}.txt", _directory, _applicationName, _rank, _size);
   PRECICE_DEBUG("Starting backend with events-file: \"{}\"", filename);
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
@@ -157,16 +157,16 @@ void EventRegistry::startBackend()
 #endif
 
   // write header
-  fmt::println(_output,
-               R"({{"name":"{}","rank":{},"size":{},"unix_us":"{}","tinit":"{}","mode":"{}","compression":{},"file_version":{}}})",
-               _applicationName,
-               _rank,
-               _size,
-               std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
-               timepoint_to_string(_initTime),
-               toString(_mode),
-               compression,
-               ::precice::profiling::file_version);
+  precice::fmt::println(_output,
+                        R"({{"name":"{}","rank":{},"size":{},"unix_us":"{}","tinit":"{}","mode":"{}","compression":{},"file_version":{}}})",
+                        _applicationName,
+                        _rank,
+                        _size,
+                        std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
+                        timepoint_to_string(_initTime),
+                        toString(_mode),
+                        compression,
+                        ::precice::profiling::file_version);
 
   _output.flush();
   _isBackendRunning = true;
@@ -256,30 +256,30 @@ struct EventWriter {
 
   void operator()(const StartEntry &se)
   {
-    fmt::format_to(out,
-                   "B{}:{}\n",
-                   se.eid, sinceInit(se.clock));
+    precice::fmt::format_to(out,
+                            "B{}:{}\n",
+                            se.eid, sinceInit(se.clock));
   }
 
   void operator()(const StopEntry &se)
   {
-    fmt::format_to(out,
-                   "E{}:{}\n",
-                   se.eid, sinceInit(se.clock));
+    precice::fmt::format_to(out,
+                            "E{}:{}\n",
+                            se.eid, sinceInit(se.clock));
   }
 
   void operator()(const DataEntry &de)
   {
-    fmt::format_to(out,
-                   "D{}:{}:{}:{}\n",
-                   de.eid, sinceInit(de.clock), de.did, de.dvalue);
+    precice::fmt::format_to(out,
+                            "D{}:{}:{}:{}\n",
+                            de.eid, sinceInit(de.clock), de.did, de.dvalue);
   }
 
   void operator()(const NameEntry &ne)
   {
-    fmt::format_to(out,
-                   "N{}:{}\n",
-                   ne.id, ne.name);
+    precice::fmt::format_to(out,
+                            "N{}:{}\n",
+                            ne.id, ne.name);
   }
 };
 } // namespace

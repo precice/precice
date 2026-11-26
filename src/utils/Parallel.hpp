@@ -252,5 +252,5 @@ std::ostream &operator<<(std::ostream &out, const Parallel::CommState &value);
 } // namespace precice
 
 template <>
-struct fmt::formatter<precice::utils::Parallel::CommState> : ostream_formatter {
+struct precice::fmt::formatter<precice::utils::Parallel::CommState> : ostream_formatter {
 };

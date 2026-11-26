@@ -54,7 +54,7 @@ static void unknownEvent(benchmark::State &state)
     er.setWriteQueueMax(0); // keep in memory
     er.setMode(Mode::All);
 
-    std::string      sname = fmt::format("Event{}", n++);
+    std::string      sname = precice::fmt::format("Event{}", n++);
     std::string_view name  = sname;
     state.ResumeTiming();
 
@@ -73,7 +73,7 @@ static void unknownFundamentalEvent(benchmark::State &state)
     er.setWriteQueueMax(0); // keep in memory
     er.setMode(Mode::All);
 
-    std::string      sname = fmt::format("Event{}", n);
+    std::string      sname = precice::fmt::format("Event{}", n);
     std::string_view name  = sname;
     state.ResumeTiming();
 

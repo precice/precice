@@ -85,5 +85,5 @@ inline std::ostream &operator<<(std::ostream &out, const DistanceAccumulator &ac
 } // namespace precice::utils::statistics
 
 template <>
-struct fmt::formatter<precice::utils::statistics::DistanceAccumulator> : ostream_formatter {
+struct precice::fmt::formatter<precice::utils::statistics::DistanceAccumulator> : ostream_formatter {
 };

@@ -25,8 +25,8 @@ template <class... A>
 std::string format_or_error(std::string_view fmt, A &&...args)
 {
   try {
-    return fmt::vformat(fmt, fmt::make_format_args(args...));
-  } catch (const fmt::format_error &e) {
+    return ::precice::fmt::vformat(fmt, ::precice::fmt::make_format_args(args...));
+  } catch (const ::precice::fmt::format_error &e) {
     return std::string{"fmt_error: "} + e.what();
   }
 }

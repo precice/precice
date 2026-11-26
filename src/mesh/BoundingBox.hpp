@@ -135,5 +135,5 @@ std::ostream &operator<<(std::ostream &, const BoundingBox &);
 } // namespace precice
 
 template <>
-struct fmt::formatter<precice::mesh::BoundingBox> : ostream_formatter {
+struct precice::fmt::formatter<precice::mesh::BoundingBox> : ostream_formatter {
 };
