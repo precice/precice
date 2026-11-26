@@ -9,6 +9,8 @@
 #include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
 // required for the squared distance computation
+#include <boost/container_hash/hash.hpp>
+#include <unordered_map>
 #include "mapping/RadialBasisFctSolver.hpp"
 
 namespace precice::mapping::impl {
@@ -139,6 +141,123 @@ void tagEmptyClusters(Vertices &clusterCenters, double clusterRadius, mesh::PtrM
   });
 }
 
+struct ClusterKey {
+  int     level;
+  int64_t ix, iy;
+
+  // Equality operator is required for unordered_map
+  bool operator==(const ClusterKey &other) const
+  {
+    return level == other.level && ix == other.ix && iy == other.iy;
+  }
+
+  // Boost uses ADL to find this function automatically
+  friend std::size_t hash_value(const ClusterKey &k)
+  {
+    std::size_t seed = 0;
+    boost::hash_combine(seed, k.level);
+    boost::hash_combine(seed, k.ix);
+    boost::hash_combine(seed, k.iy);
+    return seed;
+  }
+};
+
+using ClusterRegistry = std::unordered_map<ClusterKey, std::size_t, boost::hash<ClusterKey>>;
+
+void checkDuplicates(int level, mesh::Vertex &c, std::size_t vertexPosition, const Vertices &vertices, ClusterRegistry &hashMap, double tol)
+{
+  // 1. Discretize the center space
+  std::int64_t ix = static_cast<std::int64_t>(std::llround(static_cast<long double>(c.coord(0)) / tol));
+  std::int64_t iy = static_cast<std::int64_t>(std::llround(static_cast<long double>(c.coord(1)) / tol));
+
+  // 2. This could be a more comprehensive search, where neighbors are checked explicitly
+  for (int64_t dx = -1; dx <= 1; ++dx) {
+    for (int64_t dy = -1; dy <= 1; ++dy) {
+      ClusterKey key{level, ix + dx, iy + dy};
+      auto       it = hashMap.find(key);
+      if (it != hashMap.end()) {
+        // Duplicate in the hash table
+        const auto &other = vertices[it->second];
+        if (computeSquaredDifference(c.rawCoords(), other.rawCoords()) < 2 * math::pow_int<2>(tol)) {
+          c.tag();
+          return;
+        }
+      }
+    }
+  }
+
+  // 3. Not found in any nearby bucket, create new
+  ClusterKey new_key{level, ix, iy};
+  hashMap[new_key] = vertexPosition;
+}
+
+/**
+ * @brief This function does three things:
+ * first, it tags empty clusters
+ * second, it tags clusters too close
+ * third, it tags and returns clusters which are too full and need further refinement
+ *
+ * @param[in] refinementThreshold upper bound of the vertics per cluster used to flag the center
+ *
+ * @return vertices for refinement
+ */
+Vertices processRefinementClusters(const int level, Vertices &clusterCenters, double clusterRadius, mesh::PtrMesh mesh, std::size_t refinementThreshold)
+{
+  Vertices        refinementCenters;
+  ClusterRegistry hashMap;
+  for (std::size_t i = 0; i < clusterCenters.size(); ++i) {
+    auto &c    = clusterCenters[i];
+    auto  vert = mesh->index().getVerticesInsideBox(c, clusterRadius);
+
+    // Step 1a: tag empty clusters
+    if (vert.empty()) {
+      c.tag();
+    } else {
+      // TODO: Open question: do we filter before refining or potentially only clusters which are not refined further
+      // the current structure could lead to holes at very deep levels
+
+      // Step 1b: check for duplicates (vertices which are very close to each other) and tag them
+      // The filtering threshold here (4.0) might be a bit aggressive. Lower -> more filtering, higher -> less filtering
+      checkDuplicates(level, c, i, clusterCenters, hashMap, clusterRadius / 4.0);
+    }
+
+    // Step 2: tag clusters which are too full and add them to the refinement list
+    if (!c.isTagged() && vert.size() > static_cast<unsigned int>(refinementThreshold)) {
+      refinementCenters.emplace_back(c);
+      c.tag();
+    }
+  }
+  return refinementCenters;
+}
+
+/**
+ * @brief Refines the clusters by splitting the cluster centers into four children (in 2D)
+ * clusters are placed according to the factor \p splittingPlacementFactor between the parent cluster
+ *
+ * @param refinementCenters
+ * @param coarseLevelRadius
+ * @param splittingPlacementFactor
+ *
+ * @return Vertices
+ */
+Vertices refineClusters(const Vertices &parentCenters, const double coarseLevelRadius, const double splittingPlacementFactor)
+{
+  Vertices children;
+  children.reserve(4 * parentCenters.size());
+
+  // Valid for 2D
+  // each new cluster center should be placed at x +- radius * 15/40
+  // each new cluster center should be placed at y +- radius * 15/40
+  for (const auto &p : parentCenters) {
+    const auto offset = coarseLevelRadius * splittingPlacementFactor;
+    children.emplace_back(mesh::Vertex{Eigen::Vector2d{p.coord(0) - offset, p.coord(1) - offset}, static_cast<int>(children.size())});
+    children.emplace_back(mesh::Vertex{Eigen::Vector2d{p.coord(0) - offset, p.coord(1) + offset}, static_cast<int>(children.size())});
+    children.emplace_back(mesh::Vertex{Eigen::Vector2d{p.coord(0) + offset, p.coord(1) + offset}, static_cast<int>(children.size())});
+    children.emplace_back(mesh::Vertex{Eigen::Vector2d{p.coord(0) + offset, p.coord(1) - offset}, static_cast<int>(children.size())});
+  }
+  return children;
+}
+
 /**
  * @brief Projects non-tagged cluster centers to the closest vertices of the given \p mesh
  *
@@ -218,10 +337,11 @@ void removeTaggedVertices(Vertices &container)
  * @param[in] inMesh mesh we want to create the clustering on
  * @param[in] bb bounding box of the domain. Used to place the random samples in the domain.
  *
- * @return The estimate for the cluster radius.
+ * @return The estimate (median) and the samples.
  */
-inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMesh inMesh, const mesh::BoundingBox &bb)
+inline std::vector<double> sampleClusterRadii(unsigned int verticesPerCluster, mesh::PtrMesh inMesh, const mesh::BoundingBox &bb)
 {
+  precice::logging::Logger _log{"mapping::PartitionOfUnityMapping"};
   // Step 1: Generate random samples from the input mesh
   std::vector<VertexID> randomSamples;
 
@@ -252,6 +372,24 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
     randomSamples.emplace_back(inMesh->index().getClosestVertex(sample).index);
   }
 
+  // Corner samples at (0.25 / 0.75)^D
+  const int dims        = inMesh->getDimensions();
+  const int cornerCount = 1 << dims; // 2^D
+
+  for (int mask = 0; mask < cornerCount; ++mask) {
+    auto sample = bbCenter;
+
+    for (int d = 0; d < dims; ++d) {
+      const double offset =
+          (mask & (1 << d)) ? 0.75 : 0.25;
+
+      sample[d] += (offset - 0.5) * bb.getEdgeLength(d);
+    }
+
+    randomSamples.emplace_back(
+        inMesh->index().getClosestVertex(sample).index);
+  }
+
   // Step 2: Compute the radius of the randomSamples ('centers'), which would have verticesPerCluster vertices
   std::vector<double> sampledClusterRadii;
   for (auto s : randomSamples) {
@@ -266,8 +404,11 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
     auto maxRadius = std::max_element(squaredRadius.begin(), squaredRadius.end());
     sampledClusterRadii.emplace_back(std::sqrt(*maxRadius));
   }
+  return sampledClusterRadii;
+}
 
-  // Step 3: Sort (using nth_element) the sampled radii and select the median as cluster radius
+inline double medianSample(std::vector<double> &sampledClusterRadii)
+{
   PRECICE_ASSERT(sampledClusterRadii.size() % 2 != 0, "Median calculation is only valid for odd number of elements.");
   PRECICE_ASSERT(sampledClusterRadii.size() > 0);
   unsigned int middle = sampledClusterRadii.size() / 2;
@@ -277,93 +418,50 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
   return clusterRadius;
 }
 
-/**
- * @brief Creates a clustering as a collection of Vertices (representing the cluster centers) and a cluster radius,
- * as required for the partition of unity mapping. The algorithm estimates a cluster radius based on the input parameter
- * \p verticesPerCluster (see also \ref estimateClusterRadius above, which is directly used by the function). Afterwards,
- * the algorithm creates a cartesian-like grid of center vertices, where the distance of the centers is defined through
- * the \p relativeOverlap and the cluster radius. The parameter \p projectClustersToInput moves the cartesian center
- * vertices to the closest vertex from the input mesh, which is useful in case of very irregular meshes or shell-shaped
- * meshes.
- * The algorithm also removes potentially empty cluster, i.e., clusters which would have either no vertex from the
- * \p inMesh or from the \p outMesh . See also \ref tagEmptyClusters.
- *
- * @param[in] inMesh The input mesh (input mesh for consistent, output mesh for conservative mappings), on which the
- *            clustering is computed. The input parameters \p verticesPerCluster and \p projectClustersToInput refer
- *            to the \p inMesh
- * @param[in] outMesh The output mesh (output mesh for consistent, input mesh for conservative mappings),
- * @param[in] relativeOverlap Value between zero and one, which steers the relative distance between cluster centers.
- *            A value of zero leads to no overlap, a value of one would lead to a complete overlap between clusters.
- * @param[in] verticesPerCluster Target number of vertices per partition.
- * @param[in] projectClustersToInput if enabled, moves the cluster centers to the closest vertex of the \p inMesh
- *
- * @return a tuple for the cluster radius and a vector of vertices marking the cluster centers
- */
-inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh,
-                                                     double relativeOverlap, unsigned int verticesPerCluster,
-                                                     bool projectClustersToInput)
+inline bool requiresAdaptiveClustering(std::vector<double> &sampledClusterRadii, const int dim)
 {
-  precice::logging::Logger _log{"impl::createClustering"};
+  double medianRadius         = medianSample(sampledClusterRadii);
+  auto [minRadius, maxRadius] = std::minmax_element(sampledClusterRadii.begin(), sampledClusterRadii.end());
+
+  // The threshold currently means that we accept a four times larger cluster in 2D and a five times larger cluster in 3D
+  // measured by means of the vertices per cluster
+  const double threshold = dim == 2 ? 2.0 : 1.7;
+
+  // in this case, the choice of the radius would be fine, but rather inefficient.
+  // Most likely, we have a domain region which is stronger refined than other parts
+  bool adaptiveEfficiency = medianRadius / *minRadius > threshold;
+
+  // that's the more critical part: our choice is quite small for some regions in the domain
+  // and it could lead to a bad coverage of the domain
+  bool adaptiveCovering = *maxRadius / medianRadius > threshold;
+
+  return adaptiveEfficiency || adaptiveCovering;
+}
+
+inline double estimateGhostLayerWidth(unsigned int verticesPerCluster, mesh::PtrMesh inMesh, const mesh::BoundingBox &bb)
+{
+  auto   samples = sampleClusterRadii(verticesPerCluster, inMesh, bb);
+  double radius  = 0;
+  if (requiresAdaptiveClustering(samples, inMesh->getDimensions())) {
+    // For the adaptive case, we need the max
+    radius = *std::max_element(samples.begin(), samples.end());
+  } else {
+    // the uniform sampling
+    radius = medianSample(samples);
+  }
+  // We need two times the radius to have one layer of clusters in the ghost layer
+  return 2 * radius;
+}
+
+/**
+ */
+inline Vertices createUniformClustering(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh,
+                                        double relativeOverlap, bool projectClustersToInput,
+                                        double clusterRadius, mesh::BoundingBox globalBB, bool startGridAtEdge)
+{
+  precice::logging::Logger _log{"impl::createUniformClustering"};
   PRECICE_TRACE();
-  PRECICE_ASSERT(relativeOverlap < 1);
-  PRECICE_ASSERT(verticesPerCluster > 0);
-  PRECICE_ASSERT(inMesh->getDimensions() == outMesh->getDimensions());
 
-  // If we have either no input or no output vertices, we return immediately
-  if (inMesh->empty() || (outMesh->empty() && !outMesh->isJustInTime())) {
-    return {double{}, Vertices{}};
-  }
-
-  PRECICE_ASSERT(!inMesh->empty());
-  PRECICE_ASSERT(!outMesh->empty() || outMesh->isJustInTime());
-  // startGridAtEdge boolean switch in order to decide either to start the clustering at the edge of the bounding box in each direction
-  // (true) or start the clustering inside the bounding box (edge + 0.5 radius). The latter approach leads to fewer clusters,
-  // but might result in a worse clustering
-  const bool startGridAtEdge = projectClustersToInput;
-
-  PRECICE_DEBUG("Relative overlap: {}", relativeOverlap);
-  PRECICE_DEBUG("Vertices per cluster: {}", verticesPerCluster);
-
-  // Step 1: Compute the local bounding box of the input mesh manually
-  // Note that we don't use the corresponding bounding box functions from
-  // precice::mesh (e.g. ::getBoundingBox), as the stored bounding box might
-  // have the wrong size (e.g. direct access)
-  // @todo: Which mesh should be used in order to determine the cluster centers:
-  // pro outMesh: we want perfectly fitting clusters around our output vertices
-  // however, this makes the cluster distribution/mapping dependent on the output
-  precice::mesh::BoundingBox localBB = inMesh->index().getRtreeBounds();
-
-#ifndef NDEBUG
-  // Safety check
-  precice::mesh::BoundingBox bb_check(inMesh->getDimensions());
-  for (const mesh::Vertex &vertex : inMesh->vertices()) {
-    bb_check.expandBy(vertex);
-  }
-  PRECICE_ASSERT(bb_check == localBB);
-#endif
-
-  // If we have very few vertices in the domain, (in this case twice our cluster
-  // size as we decompose most probably at least in 4 clusters) we just use a
-  // single cluster. The clustering result of the algorithm further down is in
-  // this case not optimal and might lead to too many clusters.
-  // The single cluster has in principle a radius of inf. We use here twice the
-  // length of the longest bounding box edge length and the center of the bounding
-  // box for the center point.
-  if (inMesh->nVertices() < verticesPerCluster * 2) {
-    double cRadius = localBB.longestEdgeLength();
-    if (cRadius == 0) {
-      PRECICE_WARN("Determining a cluster radius failed. This is most likely a result of a coupling mesh consisting of just a single vertex. Setting the cluster radius to 1.");
-      cRadius = 1;
-    }
-    return {cRadius * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
-  }
-  // We define a convenience alias for the localBB. In case we need to synchronize the clustering across ranks later on, we need
-  // to work with the global bounding box of the whole domain.
-  auto globalBB = localBB;
-
-  // Step 2: Now we pick random samples from the input mesh and ask the index tree for the k-nearest neighbors
-  // in order to estimate the point density and determine a proper cluster radius (see also the function documentation)
-  double clusterRadius = estimateClusterRadius(verticesPerCluster, inMesh, localBB);
   PRECICE_DEBUG("Vertex cluster radius: {}", clusterRadius);
 
   // maximum distance between cluster centers lying diagonal to each other. The maximum distance takes the overlap condition into
@@ -412,6 +510,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   unsigned int nTotalClustersGlobal = std::accumulate(nClustersGlobal.begin(), nClustersGlobal.end(), 1U, std::multiplies<unsigned int>());
   PRECICE_DEBUG("Global number of total clusters (tentative): {}", nTotalClustersGlobal);
 
+  auto localBB = globalBB;
   // Step 6: transform the global metrics (number of clusters and starting layer) into local ones
   // Since the local and global bounding boxes are the same in the current implementation, the
   // global metrics and the local metrics will be the same.
@@ -501,6 +600,276 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(std::none_of(centers.begin(), centers.end(), [](auto &v) { return v.isTagged(); }));
   PRECICE_CHECK(centers.size() > 0, "Too many vertices have been filtered out.");
 
-  return {clusterRadius, centers};
+  return centers;
+}
+
+inline std::tuple<std::vector<double>, std::vector<Vertices>> createAdaptiveClustering(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh,
+                                                                                       double relativeOverlap, unsigned int verticesPerCluster,
+                                                                                       mesh::BoundingBox globalBB, std::vector<double> sampledRadii)
+{
+  precice::logging::Logger _log{"impl::createAdaptiveClustering"};
+  PRECICE_TRACE();
+
+  // Step 1: define the coarsest level
+  // for the adaptive clustering, we start with the maximum radius
+  double coarseLevelRadius = *std::max_element(sampledRadii.begin(), sampledRadii.end());
+
+  // maximum distance between cluster centers lying diagonal to each other. The maximum distance takes the overlap condition into
+  // account: example for 2D: if the distance between the centers is sqrt( 4 / 2 ) * radius, we violate the overlap condition between
+  // diagonal clusters
+  const int    inDim                 = inMesh->getDimensions();
+  const double maximumCenterDistance = std::sqrt(4. / inDim) * coarseLevelRadius * (1 - relativeOverlap);
+
+  // Implementation for the 2D case for now
+  PRECICE_CHECK(inMesh->getDimensions() == 2, "Adaptive clustering is currently only implemented for 2D meshes.");
+
+  // Step 1b: using the maximum distance and the bounding box, compute the number of clusters in each direction
+  // we ceil the number of clusters in order to guarantee the desired overlap
+  std::array<unsigned int, 3> nClustersGlobal{1, 1, 1};
+  for (int d = 0; d < globalBB.getDimension(); ++d)
+    nClustersGlobal[d] = std::ceil(std::max(1., globalBB.getEdgeLength(d) / maximumCenterDistance));
+
+  // Step 1c: Determine the centers of the coarse level clusters
+  Vertices coarseLevelCenters;
+  // Vector used to temporarily store each center coordinates
+  std::vector<double> centerCoords(inDim);
+  // Vector storing the distances between the cluster in each direction
+  std::vector<double> distances(inDim);
+  // Vector storing the starting coordinates in each direction
+  std::vector<double> start(inDim);
+  // Fill the constant vectos, i.e., the distances and the start
+  for (unsigned int d = 0; d < distances.size(); ++d) {
+    // this distance calculation guarantees that we have at least the minimal specified overlap, as we ceil the division for the number of clusters
+    // as an alternative, once could use distance = const = maximumCenterDistance, which might lead to better results when projecting and removing duplicates (?)
+    distances[d] = globalBB.getEdgeLength(d) / (nClustersGlobal[d]);
+    start[d]     = globalBB.minCorner()(d);
+  }
+  PRECICE_DEBUG("Distances: {}", distances);
+
+  // Step 1d: Take care of the starting layer: if we start the grid at the globalBB edge we have an additional layer in each direction
+  std::transform(start.begin(), start.end(), distances.begin(), start.begin(), [](auto s, auto d) { return s + 0.5 * d; });
+
+  // Print some information
+  PRECICE_DEBUG("Global cluster distribution: {}", nClustersGlobal);
+  unsigned int nTotalClustersGlobal = std::accumulate(nClustersGlobal.begin(), nClustersGlobal.end(), 1U, std::multiplies<unsigned int>());
+  PRECICE_DEBUG("Global number of total clusters (tentative): {}", nTotalClustersGlobal);
+
+  auto localBB = globalBB;
+  // Step 1e: transform the global metrics (number of clusters and starting layer) into local ones
+  // Since the local and global bounding boxes are the same in the current implementation, the
+  // global metrics and the local metrics will be the same.
+  // First, we need to update the starting points of our clustering scheme
+  std::array<unsigned int, 3> nClustersLocal{1, 1, 1};
+  for (unsigned int d = 0; d < start.size(); ++d) {
+    // Exclude the case where we have no distances (nClustersGlobal[d] == 1 )
+    if (distances[d] > 0) {
+      start[d] += std::ceil(((localBB.minCorner()(d) - start[d]) / distances[d]) - math::NUMERICAL_ZERO_DIFFERENCE) * distances[d];
+      // One cluster for the starting point and a further one for each distance we can fit into the BB
+      nClustersLocal[d] = 1 + std::floor(((localBB.maxCorner()(d) - start[d]) / distances[d]) + math::NUMERICAL_ZERO_DIFFERENCE);
+    }
+  }
+
+  unsigned int nTotalClustersLocal = std::accumulate(nClustersLocal.begin(), nClustersLocal.end(), 1U, std::multiplies<unsigned int>());
+  coarseLevelCenters.resize(nTotalClustersLocal, mesh::Vertex({centerCoords, -1}));
+
+  // Print some information
+  PRECICE_DEBUG("Local cluster distribution: {}", nClustersLocal);
+  PRECICE_DEBUG("Local number of total clusters (tentative): {}", nTotalClustersLocal);
+
+  // Step 1f: fill the center container using the zCurve for indexing. For the further processing, it is also important to ensure
+  // that the ID within the center Vertex class coincides with the position of the center vertex in the container.
+  // We start with the (bottom left) corner and iterate over all dimensions
+  PRECICE_ASSERT(inDim >= 2);
+  if (inDim == 2) {
+    centerCoords[0] = start[0];
+    for (unsigned int x = 0; x < nClustersLocal[0]; ++x, centerCoords[0] += distances[0]) {
+      centerCoords[1] = start[1];
+      for (unsigned int y = 0; y < nClustersLocal[1]; ++y, centerCoords[1] += distances[1]) {
+        auto id = zCurve(std::array<unsigned int, 3>{{x, y, 0}}, nClustersLocal);
+        PRECICE_ASSERT(id < static_cast<int>(coarseLevelCenters.size()) && id >= 0);
+        coarseLevelCenters[id] = mesh::Vertex({centerCoords, id});
+      }
+    }
+  } else {
+    centerCoords[0] = start[0];
+    for (unsigned int x = 0; x < nClustersLocal[0]; ++x, centerCoords[0] += distances[0]) {
+      centerCoords[1] = start[1];
+      for (unsigned int y = 0; y < nClustersLocal[1]; ++y, centerCoords[1] += distances[1]) {
+        centerCoords[2] = start[2];
+        for (unsigned int z = 0; z < nClustersLocal[2]; ++z, centerCoords[2] += distances[2]) {
+          auto id = zCurve(std::array<unsigned int, 3>{{x, y, z}}, nClustersLocal);
+          PRECICE_ASSERT(id < static_cast<int>(coarseLevelCenters.size()) && id >= 0);
+          coarseLevelCenters[id] = mesh::Vertex({centerCoords, id});
+        }
+      }
+    }
+  }
+
+  // Step 2: Now we have the coarse level clustering, we can start with the adaptive refinement. We check each cluster and split it if it contains too many vertices or if it is empty.
+  // TODO: We do not care about empty'ness in the output mesh for now
+
+  std::vector<double>   clusterRadii;
+  std::vector<Vertices> clustering;
+
+  // the following three parameters might be tuned
+  // the division ratio, however, affects the splitting placement factor
+  // the current strategy:
+  // division ratio: 1.6: next smaller level should be coarseRadius / 1.6
+  // in 2D: split the coarse cluster into 4 clusters
+  // each new cluster center should be placed at x +- radius * 15/40
+  // each new cluster center should be placed at y +- radius * 15/40
+  const int    refinementThreshold      = 2.5 * verticesPerCluster;
+  const double divisionRatio            = 1.6;
+  const double splittingPlacementFactor = 15. / 40.;
+
+  // temporary variables for the refinement loop
+  double   tmpRadius     = coarseLevelRadius;
+  Vertices tmpClustering = coarseLevelCenters;
+
+  while (true) {
+
+    Vertices refinementCenters = processRefinementClusters(static_cast<int>(clusterRadii.size()),
+                                                           tmpClustering, tmpRadius, inMesh, refinementThreshold);
+    removeTaggedVertices(tmpClustering);
+    clusterRadii.emplace_back(tmpRadius);
+    clustering.emplace_back(tmpClustering);
+
+    // If nothing is left to refine, we stop
+    if (refinementCenters.empty()) {
+      break;
+    }
+
+    // division ratio: 1.6: next smaller level should be coarseRadius / 1.6
+    // in 2D: split the coarse cluster into 4 clusters
+    tmpClustering = refineClusters(refinementCenters, tmpRadius, splittingPlacementFactor);
+    tmpRadius /= divisionRatio;
+  }
+
+  // Next steps: now go through all clusters: tag/flag too full clusters and empty clusters
+  // split too full clusters:
+
+  // // Step 8: tag vertices, which should be removed later on
+
+  // // Step 8a: tag empty clusters
+  // tagEmptyClusters(centers, clusterRadius, inMesh);
+  // if (!outMesh->isJustInTime()) {
+  //   tagEmptyClusters(centers, clusterRadius, outMesh);
+  // }
+  // PRECICE_DEBUG("Number of non-tagged centers after empty clusters were filtered: {}", std::count_if(centers.begin(), centers.end(), [](auto &v) { return !v.isTagged(); }));
+
+  // // Step 10: finally, remove the vertices from the center container
+  // removeTaggedVertices(centers);
+  // PRECICE_ASSERT(std::none_of(centers.begin(), centers.end(), [](auto &v) { return v.isTagged(); }));
+  // PRECICE_CHECK(centers.size() > 0, "Too many centers have been filtered out.");
+
+  return {clusterRadii, clustering};
+}
+
+/**
+ * @brief Creates a clustering as a collection of Vertices (representing the cluster centers) and a cluster radius,
+ * as required for the partition of unity mapping. The algorithm estimates a cluster radius based on the input parameter
+ * \p verticesPerCluster (see also \ref sampleClusterRadii above, which is directly used by the function). Afterwards,
+ * the algorithm creates a cartesian-like grid of center vertices, where the distance of the centers is defined through
+ * the \p relativeOverlap and the cluster radius. The parameter \p projectClustersToInput moves the cartesian center
+ * vertices to the closest vertex from the input mesh, which is useful in case of very irregular meshes or shell-shaped
+ * meshes.
+ * The algorithm also removes potentially empty cluster, i.e., clusters which would have either no vertex from the
+ * \p inMesh or from the \p outMesh . See also \ref tagEmptyClusters.
+ *
+ * @param[in] inMesh The input mesh (input mesh for consistent, output mesh for conservative mappings), on which the
+ *            clustering is computed. The input parameters \p verticesPerCluster and \p projectClustersToInput refer
+ *            to the \p inMesh
+ * @param[in] outMesh The output mesh (output mesh for consistent, input mesh for conservative mappings),
+ * @param[in] relativeOverlap Value between zero and one, which steers the relative distance between cluster centers.
+ *            A value of zero leads to no overlap, a value of one would lead to a complete overlap between clusters.
+ * @param[in] verticesPerCluster Target number of vertices per partition.
+ * @param[in] projectClustersToInput if enabled, moves the cluster centers to the closest vertex of the \p inMesh
+ *
+ * @return a tuple for the cluster radius and a vector of vertices marking the cluster centers
+ */
+inline std::tuple<std::vector<double>, std::vector<Vertices>> createClustering(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh,
+                                                                               double relativeOverlap, unsigned int verticesPerCluster,
+                                                                               bool projectClustersToInput)
+{
+  precice::logging::Logger _log{"impl::createClustering"};
+  PRECICE_TRACE();
+  PRECICE_ASSERT(relativeOverlap < 1);
+  PRECICE_ASSERT(verticesPerCluster > 0);
+  PRECICE_ASSERT(inMesh->getDimensions() == outMesh->getDimensions());
+
+  // If we have either no input or no output vertices, we return immediately
+  if (inMesh->empty() || (outMesh->empty() && !outMesh->isJustInTime())) {
+    return {std::vector<double>{double{}}, std::vector<Vertices>{Vertices{}}};
+  }
+
+  PRECICE_ASSERT(!inMesh->empty());
+  PRECICE_ASSERT(!outMesh->empty() || outMesh->isJustInTime());
+  // startGridAtEdge boolean switch in order to decide either to start the clustering at the edge of the bounding box in each direction
+  // (true) or start the clustering inside the bounding box (edge + 0.5 radius). The latter approach leads to fewer clusters,
+  // but might result in a worse clustering
+  const bool startGridAtEdge = projectClustersToInput;
+
+  PRECICE_DEBUG("Relative overlap: {}", relativeOverlap);
+  PRECICE_DEBUG("Vertices per cluster: {}", verticesPerCluster);
+
+  // Step 1: Compute the local bounding box of the input mesh manually
+  // Note that we don't use the corresponding bounding box functions from
+  // precice::mesh (e.g. ::getBoundingBox), as the stored bounding box might
+  // have the wrong size (e.g. direct access)
+  // @todo: Which mesh should be used in order to determine the cluster centers:
+  // pro outMesh: we want perfectly fitting clusters around our output vertices
+  // however, this makes the cluster distribution/mapping dependent on the output
+  precice::mesh::BoundingBox localBB = inMesh->index().getRtreeBounds();
+
+#ifndef NDEBUG
+  // Safety check
+  precice::mesh::BoundingBox bb_check(inMesh->getDimensions());
+  for (const mesh::Vertex &vertex : inMesh->vertices()) {
+    bb_check.expandBy(vertex);
+  }
+  PRECICE_ASSERT(bb_check == localBB);
+#endif
+
+  // If we have very few vertices in the domain, (in this case twice our cluster
+  // size as we decompose most probably at least in 4 clusters) we just use a
+  // single cluster. The clustering result of the algorithm further down is in
+  // this case not optimal and might lead to too many clusters.
+  // The single cluster has in principle a radius of inf. We use here twice the
+  // length of the longest bounding box edge length and the center of the bounding
+  // box for the center point.
+  if (inMesh->nVertices() < verticesPerCluster * 2) {
+    double cRadius = localBB.longestEdgeLength();
+    if (cRadius == 0) {
+      PRECICE_WARN("Determining a cluster radius failed. This is most likely a result of a coupling mesh consisting of just a single vertex. Setting the cluster radius to 1.");
+      cRadius = 1;
+    }
+    return {std::vector<double>{cRadius * 2}, std::vector<Vertices>{Vertices{mesh::Vertex({localBB.center(), 0})}}};
+  }
+  // We define a convenience alias for the localBB. In case we need to synchronize the clustering across ranks later on, we need
+  // to work with the global bounding box of the whole domain.
+  auto globalBB = localBB;
+
+  // Step 2: Now we pick random samples from the input mesh and ask the index tree for the k-nearest neighbors
+  // in order to estimate the point density and determine a proper cluster radius (see also the function documentation)
+  auto sampledClusterRadii = sampleClusterRadii(verticesPerCluster, inMesh, localBB);
+  PRECICE_DEBUG("Sampled cluster radii: {}", sampledClusterRadii);
+  bool adaptive = requiresAdaptiveClustering(sampledClusterRadii, inMesh->getDimensions());
+
+  if (adaptive) {
+    PRECICE_DEBUG("Computing adaptive clustering");
+    auto [radii, centers] = createAdaptiveClustering(inMesh, outMesh, relativeOverlap, verticesPerCluster, globalBB, sampledClusterRadii);
+    PRECICE_DEBUG("Global number of levels: {}", radii.size());
+    for (unsigned int i = 0; i < radii.size(); ++i) {
+      PRECICE_DEBUG("Level {}: cluster radius {}, number of clusters {}", i, radii[i], centers[i].size());
+    }
+    return {radii, centers};
+  } else {
+    PRECICE_DEBUG("Computing uniform clustering");
+    auto clusterRadius = medianSample(sampledClusterRadii);
+    PRECICE_DEBUG("Vertex cluster radius: {}", clusterRadius);
+    Vertices centers = createUniformClustering(inMesh, outMesh,
+                                               relativeOverlap, projectClustersToInput, clusterRadius, globalBB, startGridAtEdge);
+    return {std::vector<double>{clusterRadius}, std::vector<Vertices>{centers}};
+  }
 }
 } // namespace precice::mapping::impl
