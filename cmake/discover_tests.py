@@ -107,7 +107,7 @@ for name, ranks in get_tests():
     testargs = [f'"{arg}"' for arg in testargs]
     add_command(args.output, "add_test", [testname] + testargs)
 
-    timeout = args.timeout_long if "Time" in labels else args.timeout_normal
+    timeout = args.timeout_long if "time" in labels else args.timeout_normal
 
     pargs = [
         testname,
