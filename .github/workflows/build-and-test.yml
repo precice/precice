@@ -233,6 +233,8 @@ jobs:
             CXX: 'clang++'
             TYPE: Release
     steps:
+    - name: Setup system
+      run: sudo sysctl -w net.inet.tcp.delayed_ack=0
     - uses: actions/checkout@v7
     - name: Install preCICE dependencies
       run: brew install --build-from-source --only-dependencies --overwrite precice
