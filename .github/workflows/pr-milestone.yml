@@ -1,0 +1,24 @@
+name: Require milestone
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, milestoned, demilestoned]
+
+permissions: {}
+
+jobs:
+  check-milestone:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check milestone
+        env:
+          MILESTONE: ${{ github.event.pull_request.milestone.title }}
+        run: |
+          if [ -z "$MILESTONE" ]; then
+            echo "::error::This pull request has no milestone. Assign a milestone."
+            exit 1
+          fi
+          if [[ "${MILESTONE,,}" == *.x.x ]]; then
+            echo "::error::The milestone name must not be a wildcard milestone for an upcoming major version N.x.x."
+            exit 1
+          fi
