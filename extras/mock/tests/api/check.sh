@@ -33,7 +33,7 @@ fi
 
 # Only the T> lines are the test contract; normalize the config path, which
 # appears in some error messages.
-sed -i -e '/^T> /!d' -e "s|$CONFIG|<CONFIG>|g" "$tmp"
+sed -e '/^T> /!d' -e "s|$CONFIG|<CONFIG>|g" -i "$tmp"
 
 if [ "${UPDATE_EXPECTED:-0}" = "1" ]; then
     mkdir -p "$(dirname "$EXPECTED")"
@@ -48,7 +48,7 @@ if [ ! -f "$EXPECTED" ]; then
     exit 1
 fi
 
-if ! diff -u "$EXPECTED" "$tmp"; then
+if ! diff --strip-trailing-cr --unified "$EXPECTED" "$tmp"; then
     echo "Mock behavior differs from expected output ($NAME)" >&2
     exit 1
 fi
