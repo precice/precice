@@ -1,4 +1,5 @@
 #include <Eigen/Core>
+#include <mapping/MathHelper.hpp>
 #include <mesh/Edge.hpp>
 #include <mesh/Mesh.hpp>
 #include <mesh/Utils.hpp>
@@ -72,6 +73,23 @@ Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const Eigen::VectorXd &inpu
 std::size_t countVerticesInBoundingBox(mesh::PtrMesh mesh, const mesh::BoundingBox &bb)
 {
   return std::count_if(mesh->vertices().cbegin(), mesh->vertices().cend(), [&bb](const auto &v) { return bb.contains(v); });
+}
+
+double estimateMeshResolution(mesh::Mesh &inputMesh)
+{
+  int sampleSize = std::min(3, static_cast<int>(inputMesh.vertices().size()));
+
+  const auto          i0 = inputMesh.vertices().size() / 2;
+  const mesh::Vertex &x0 = inputMesh.vertices().at(i0);
+
+  const std::vector<VertexID> matches = inputMesh.index().getClosestVertices(x0.getCoords(), sampleSize);
+
+  double h = 0;
+  for (size_t i = 0; i < sampleSize; i++) {
+    const mesh::Vertex xi = inputMesh.vertices().at(matches.at(i));
+    h += std::sqrt(utils::computeSquaredDifference(xi.rawCoords(), x0.rawCoords()));
+  }
+  return h / sampleSize;
 }
 
 } // namespace precice::mesh
