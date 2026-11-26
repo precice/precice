@@ -226,5 +226,5 @@ std::pair<InputIt, InputIt> find_first_range(InputIt first, InputIt last, Predic
 } // namespace precice::utils
 
 template <typename Iter>
-struct fmt::formatter<precice::utils::RangePreview<Iter>> : ostream_formatter {
+struct precice::fmt::formatter<precice::utils::RangePreview<Iter>> : ostream_formatter {
 };

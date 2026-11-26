@@ -161,7 +161,7 @@ void TXTTableWriter::reset()
 
 } // namespace precice::io
 
-auto fmt::formatter<precice::io::TXTTableWriter::DataType>::format(precice::io::TXTTableWriter::DataType c, format_context &ctx) const
+auto precice::fmt::formatter<precice::io::TXTTableWriter::DataType>::format(precice::io::TXTTableWriter::DataType c, format_context &ctx) const
 {
   std::string_view name = "unknown";
   switch (c) {

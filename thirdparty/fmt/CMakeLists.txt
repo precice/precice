@@ -7,3 +7,7 @@ set_target_properties(fmtlib-static
   CXX_STANDARD_REQUIRED YES
   CXX_EXTENSIONS NO
   )
+target_compile_definitions(fmtlib-static PUBLIC
+  "FMT_BEGIN_NAMESPACE=namespace precice::fmt {"
+  "FMT_END_NAMESPACE=}"
+)
