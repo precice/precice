@@ -70,9 +70,6 @@ public:
       const std::string     &name,
       const Eigen::Vector3d &value);
 
-  /// Closes the file, is automatically called on destruction.
-  void close();
-
   /// Resets the table information.
   void reset();
 

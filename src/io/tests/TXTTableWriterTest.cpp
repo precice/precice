@@ -35,7 +35,6 @@ BOOST_AUTO_TEST_CASE(TXTTableWriterTest)
     writer.writeData("Timestep", t);
     writer.writeData("Importance", t * 2);
   }
-  writer.close();
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests
