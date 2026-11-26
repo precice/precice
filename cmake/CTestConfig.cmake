@@ -257,7 +257,8 @@ else()
     "--executable=$<TARGET_FILE:testprecice>"
     "--output=${ctest_tests_file}"
     "--run-dir=${PRECICE_TEST_DIR}"
-    "--timeout=${PRECICE_TEST_TIMEOUT_NORMAL}"
+    "--timeout-normal=${PRECICE_TEST_TIMEOUT_NORMAL}"
+    "--timeout-long=${PRECICE_TEST_TIMEOUT_LONG}"
     DEPENDS testprecice
     COMMENT "Generating list of tests"
     VERBATIM)
