@@ -1,0 +1,30 @@
+T> ERR getMeshDimensions-unknown: The mesh named "NopeMesh" is unknown to preCICE. Available meshes are: MeshOne, MeshTwo
+T> ERR getDataDimensions-unknown: Data 'NopeData' on mesh 'MeshTwo' is not used by participant 'SolverTwo'
+T> ERR getDataDimensions-unknownmesh: The mesh named "NopeMesh" is unknown to preCICE. Available meshes are: MeshOne, MeshTwo
+T> getMeshVertexSize-unknown-result: EXC The mesh named "NopeMesh" is unknown to preCICE. Available meshes are: MeshOne, MeshTwo
+T> requiresMeshConnectivityFor-unknown-result: EXC The mesh named "NopeMesh" is unknown to preCICE. Available meshes are: MeshOne, MeshTwo
+T> getMeshVertexSize-received-preinit: EXC initialize() has to be called before accessing data of the received mesh "MeshOne" on participant "SolverTwo".
+T> ERR setMeshVertex-wrongdims: setMeshVertex() was called with 3 coordinates, but expects 2 coordinates for this mesh.
+T> ERR setMeshVertices-mismatch: setMeshVertices() was called with 2 vertices and 3 coordinates (2D), but needs 4 coordinates (2 x 2).
+T> ERR readData-beforeinit: readData(...) cannot be called before initialize().
+T> ERR isCouplingOngoing-beforeinit: initialize() has to be called before isCouplingOngoing() can be evaluated.
+T> ERR getMaxTimeStepSize-beforeinit: initialize() has to be called before getMaxTimeStepSize() can be evaluated.
+T> ERR isTimeWindowComplete-beforeinit: initialize() has to be called before isTimeWindowComplete().
+T> ERR requiresWritingCheckpoint-beforeinit: initialize() has to be called before requiresWritingCheckpoint().
+T> ERR requiresReadingCheckpoint-beforeinit: initialize() has to be called before requiresReadingCheckpoint().
+T> ERR stopProfiling-unbalanced: There is no user-started event to stop.
+T> ERR startProfiling-slash: The provided section name "a/b" may not contain a forward-slash "/"
+T> ERR writeData-notwritable: Data 'DataOne' on mesh 'MeshTwo' is not configured for writing by participant 'SolverTwo'. Please add <write-data name="DataOne" mesh="MeshTwo" /> to the configuration.
+T> ERR writeData-unknowndata: Data 'NopeData' on mesh 'MeshTwo' is not used by participant 'SolverTwo'
+T> ERR writeData-wrongsize: writeData() was called with 3 vertices and 7 values for 2-dimensional data 'DataTwo', but needs 6 values (3 x 2).
+T> ERR writeData-invalidid: Cannot write data "DataTwo" to mesh "MeshTwo" due to invalid Vertex ID at vertices[2]. Please make sure you only use the results from calls to setMeshVertex/Vertices().
+T> ERR setMeshEdge-invalidid: NO-EXCEPTION
+T> ERR setMeshTriangle-repeated: NO-EXCEPTION
+T> ERR setMeshEdges-odd: NO-EXCEPTION
+T> ERR resetMesh-not-enabled: You called the API function "resetMesh", which is part of the experimental API. You may unlock the full API by specifying <precice-configuration experimental="true" ... > in the configuration. Please be aware that experimental features may change in any future version (even minor or bugfix).
+T> ERR setMeshAccessRegion-not-received: This participant attempted to set an access region (via "setMeshAccessRegion") on mesh "MeshTwo", but mesh "MeshTwo" is either not a received mesh or its api access was not enabled in the configuration. setMeshAccessRegion(...) is only valid for (<receive-mesh name="MeshTwo" ... api-access="true"/>).
+T> ERR writeGradientData-nogradient: You called the API function "writeGradientData", which is part of the experimental API. You may unlock the full API by specifying <precice-configuration experimental="true" ... > in the configuration. Please be aware that experimental features may change in any future version (even minor or bugfix).
+T> ERR setMeshVertex-unknownmesh: The mesh named "NopeMesh" is unknown to preCICE. Available meshes are: MeshOne, MeshTwo
+T> ERR setMeshVertices-unknownmesh: The mesh named "NopeMesh" is unknown to preCICE. Available meshes are: MeshOne, MeshTwo
+T> ERR setMeshEdge-unknownmesh: The mesh named "NopeMesh" is unknown to preCICE. Available meshes are: MeshOne, MeshTwo
+T> ERR advance-beforeinit: initialize() has to be called before advance().

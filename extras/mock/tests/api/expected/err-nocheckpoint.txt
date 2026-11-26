@@ -1,0 +1,2 @@
+T> initialize done
+T> ERR advance-without-checkpoint: The iteration checkpoint wasn't written. Did you forget to call "requiresWritingCheckpoint()"?
