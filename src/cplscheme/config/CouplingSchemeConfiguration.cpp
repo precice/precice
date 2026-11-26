@@ -792,7 +792,7 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
     const std::string &dataName,
     const std::string &meshName) const
 {
-  PRECICE_CHECK(_meshConfig->hasMeshName(meshName) && _meshConfig->getMesh(meshName)->data(dataName),
+  PRECICE_CHECK(_meshConfig->hasMeshName(meshName) && _meshConfig->getMesh(meshName)->hasDataName(dataName),
                 "Data \"{}\" used by mesh \"{}\" is not configured.", dataName, meshName);
   const mesh::PtrMesh &mesh = _meshConfig->getMesh(meshName);
   return mesh->data(dataName);

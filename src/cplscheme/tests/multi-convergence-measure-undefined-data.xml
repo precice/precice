@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:vector name="Forces" />
+  <data:vector name="Displacements" />
+
+  <mesh name="MeshA" dimensions="2">
+    <use-data name="Forces" />
+    <use-data name="Displacements" />
+  </mesh>
+
+  <participant name="A">
+    <provide-mesh name="MeshA" />
+    <write-data name="Forces" mesh="MeshA" />
+    <read-data name="Displacements" mesh="MeshA" />
+  </participant>
+
+  <participant name="B">
+    <receive-mesh name="MeshA" from="A" api-access="true" />
+    <write-data name="Displacements" mesh="MeshA" />
+    <read-data name="Forces" mesh="MeshA" />
+  </participant>
+
+  <m2n:sockets acceptor="A" connector="B" />
+
+  <coupling-scheme:multi>
+    <participant name="A" control="yes" />
+    <participant name="B" />
+    <max-time value="1.0" />
+    <time-window-size value="0.1" />
+    <exchange data="Forces" mesh="MeshA" from="A" to="B" />
+    <exchange data="Displacements" mesh="MeshA" from="B" to="A" />
+    <max-iterations value="5" />
+    <absolute-convergence-measure data="NOT_DEFINED" mesh="MeshA" limit="1e-4" />
+  </coupling-scheme:multi>
+</precice-configuration>
