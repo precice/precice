@@ -70,7 +70,12 @@ public:
       const std::string     &name,
       const Eigen::Vector3d &value);
 
-  /// Closes the file, is automatically called on destruction.
+  /**
+   * @brief Closes the file before the writer is destroyed.
+   *
+   * This is optional: destroying the writer closes the file via the destructor of the output stream,
+   * without calling this function. The file must still be open when calling this.
+   */
   void close();
 
   /// Resets the table information.
