@@ -19,7 +19,7 @@ def test_dir(root: pathlib.Path, testname: str):
 
 def get_labels(testname: str):
     suite = testname[: testname.find("/")].removesuffix("Tests")
-
+    suites = testname.split("/")[:-1]
     labels = [suite] + [
         kw
         for kw in [
@@ -32,6 +32,9 @@ def get_labels(testname: str):
         ]
         if kw in testname
     ]
+
+    if "Time" in suites:
+        labels.append("Time")
 
     return list(map(str.lower, labels))
 
