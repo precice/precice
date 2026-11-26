@@ -54,6 +54,8 @@ parser.add_argument("--mpi-extra")
 parser.add_argument("--mpi-np")
 parser.add_argument("--mpi-pre")
 parser.add_argument("--mpi-post")
+parser.add_argument("--timeout-normal", type=int)
+parser.add_argument("--timeout-long", type=int)
 
 args = parser.parse_args()
 
@@ -105,13 +107,15 @@ for name, ranks in get_tests():
     testargs = [f'"{arg}"' for arg in testargs]
     add_command(args.output, "add_test", [testname] + testargs)
 
+    timeout = args.timeout_long if "Time" in labels else args.timeout_normal
+
     pargs = [
         testname,
         "PROPERTIES",
         "ENVIRONMENT",
         '"OMP_NUM_THREADS=2;OMP_PROC_BIND=false"',
         "TIMEOUT",
-        '"30"',
+        f'"{timeout}"',
         '"SKIP_REGULAR_EXPRESSION"',
         '"error 1175;failed to communicate with smpd manager on"',  # smpd post error
         "WORKING_DIRECTORY",
