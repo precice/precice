@@ -473,6 +473,11 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         PRECICE_ERROR("Scaled consistent mapping is not yet supported for a parallel participant. "
                       "You could run in serial or use a plain (read-)consistent mapping instead.");
       }
+      const auto mappingName = confMapping.mapping->getName();
+      PRECICE_CHECK(mappingName != "axial-geomultiscale" && mappingName != "radial-geomultiscale",
+                    "The {} mapping from mesh \"{}\" to mesh \"{}\" of participant \"{}\" is not available for parallel participants. "
+                    "Please run this participant in serial.",
+                    mappingName, fromMesh, toMesh, participant->getName());
     }
 
     PRECICE_CHECK(!confMapping.mapping->isScaledConsistent() || !(confMapping.fromMesh->isJustInTime() || confMapping.toMesh->isJustInTime()),

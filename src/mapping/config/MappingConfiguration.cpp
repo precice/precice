@@ -459,14 +459,6 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_CHECK(_experimental, "The configured mapping \"{}\" is experimental and the configuration can change between minor releases. Set experimental=\"on\" in the precice-configuration tag.", type);
     }
 
-    if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE && context.size > 1) {
-      throw std::runtime_error{"Axial geometric multiscale mapping is not available for parallel participants."};
-    }
-
-    if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE && context.size > 1) {
-      throw std::runtime_error{"Radial geometric multiscale mapping is not available for parallel participants."};
-    }
-
     // pum related tags
     int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 100);
     double relativeOverlap    = tag.getDoubleAttributeValue(ATTR_RELATIVE_OVERLAP, 0.3);
