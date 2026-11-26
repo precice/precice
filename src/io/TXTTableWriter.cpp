@@ -146,12 +146,6 @@ void TXTTableWriter::writeData(
   }
 }
 
-void TXTTableWriter::close()
-{
-  PRECICE_ASSERT(_outputStream.is_open());
-  _outputStream.close();
-}
-
 /// Resets the table information.
 void TXTTableWriter::reset()
 {
