@@ -244,6 +244,8 @@ if(PRECICE_FEATURE_MPI_COMMUNICATION)
     "--mpi-extra=${PRECICE_CTEST_MPI_FLAGS}"
     "--mpi-pre=${MPIEXEC_PREFLAGS}"
     "--mpi-post=${MPIEXEC_POSTFLAGS}"
+    "--timeout-normal=${PRECICE_TEST_TIMEOUT_NORMAL}"
+    "--timeout-long=${PRECICE_TEST_TIMEOUT_LONG}"
     DEPENDS testprecice
     COMMENT "Generating list of tests"
     VERBATIM)
@@ -255,6 +257,7 @@ else()
     "--executable=$<TARGET_FILE:testprecice>"
     "--output=${ctest_tests_file}"
     "--run-dir=${PRECICE_TEST_DIR}"
+    "--timeout=${PRECICE_TEST_TIMEOUT_NORMAL}"
     DEPENDS testprecice
     COMMENT "Generating list of tests"
     VERBATIM)
