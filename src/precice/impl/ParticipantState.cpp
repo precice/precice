@@ -437,17 +437,17 @@ void ParticipantState::exportIntermediate(IntermediateExport exp)
 void ParticipantState::checkDuplicatedUse(std::string_view mesh)
 {
   PRECICE_CHECK(_meshContexts.count(mesh) == 0,
-                "Mesh \"{} cannot be used twice by participant {}. "
-                "Please remove one of the provide/receive-mesh nodes with name=\"{}\"./>",
+                "Mesh \"{}\" cannot be used twice by participant \"{}\". "
+                "Please remove one of the provide/receive-mesh nodes with name=\"{}\".",
                 mesh, _name, mesh);
 }
 
 void ParticipantState::checkDuplicatedData(std::string_view mesh, std::string_view data)
 {
   PRECICE_CHECK(!isDataWrite(mesh, data) && !isDataRead(mesh, data),
-                "ParticipantState \"{}\" can read/write data \"{}\" from/to mesh \"{}\" only once. "
+                "Participant \"{}\" can read/write data \"{}\" from/to mesh \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
-                _name, mesh, data);
+                _name, data, mesh);
 }
 
 std::string ParticipantState::hintForMesh(std::string_view mesh) const

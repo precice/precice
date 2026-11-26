@@ -149,6 +149,71 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     )
 endfunction(add_precice_test_run_solverdummies)
 
+function(add_precice_test_run_mocked_solverdummy PAT_LANG)
+  # Turn languages to lowercase
+  string(TOLOWER ${PAT_LANG} PAT_LANG)
+
+  # We always prefix our tests
+  set(PAT_NAME "solverdummy.run_mocked.${PAT_LANG}")
+  set(PAT_FULL_NAME "precice.${PAT_NAME}")
+
+  # Not supported on windows
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL Linux)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+  endif()
+  # In MacOS, the application needs to be copied and the rpath changed
+  # otool -L solverdummy
+  # install_name_tool -change @rpath/libprecice.3.dylib @rpath/libpreciceMocked.3.dylib solverdummy
+  # otool -L solverdummy # verify
+  # In some instances, the executable needs to be resigned
+  # signcode -f -s - solverdummy
+
+  # Make sure all required compilers are available
+  if(PAT_LANG STREQUAL "fortran")
+    if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_BINDINGS_FORTRAN)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+    endif()
+  elseif(PAT_LANG STREQUAL "c")
+    if(NOT CMAKE_C_COMPILER OR NOT PRECICE_BINDINGS_C)
+      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+      return()
+    endif()
+  endif()
+
+  # Locate the solverdummy config
+  set(PAT_CONFIG "${preCICE_SOURCE_DIR}/examples/solverdummies/precice-config.xml")
+  if(NOT EXISTS ${PAT_CONFIG})
+    message(FATAL_ERROR "CMake was unable to locate the solverdummy config!")
+  endif()
+
+  # Locate binary dir of solverdummy
+  set(PAT_BIN_DIR "${PRECICE_SOLVERDUMMY_DIR}/${PAT_LANG}")
+  if(NOT IS_DIRECTORY ${PAT_BIN_DIR})
+    message(FATAL_ERROR "There is no configured solverdummy for language ${PAT_LANG}!")
+  endif()
+
+  # Generate run directory
+  set(PAT_RUN_DIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
+  file(MAKE_DIRECTORY "${PAT_RUN_DIR}")
+
+  # Add the actual test
+  message(STATUS "Test ${PAT_FULL_NAME}")
+  add_test(NAME ${PAT_FULL_NAME} COMMAND ${PAT_BIN_DIR}/solverdummy ${PAT_CONFIG} SolverOne)
+
+  # Setting properties
+  set_tests_properties(${PAT_FULL_NAME}
+    PROPERTIES
+    WORKING_DIRECTORY "${PAT_RUN_DIR}"
+    FIXTURES_REQUIRED "${PAT_LANG}-solverdummy"
+    LABELS "solverdummy;mock"
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+    ENVIRONMENT "LD_PRELOAD=$<TARGET_FILE:preciceMocked>"
+    )
+
+endfunction(add_precice_test_run_mocked_solverdummy)
+
 
 enable_testing()
 
@@ -179,6 +244,8 @@ if(PRECICE_FEATURE_MPI_COMMUNICATION)
     "--mpi-extra=${PRECICE_CTEST_MPI_FLAGS}"
     "--mpi-pre=${MPIEXEC_PREFLAGS}"
     "--mpi-post=${MPIEXEC_POSTFLAGS}"
+    "--timeout-normal=${PRECICE_TEST_TIMEOUT_NORMAL}"
+    "--timeout-long=${PRECICE_TEST_TIMEOUT_LONG}"
     DEPENDS testprecice
     COMMENT "Generating list of tests"
     VERBATIM)
@@ -190,6 +257,8 @@ else()
     "--executable=$<TARGET_FILE:testprecice>"
     "--output=${ctest_tests_file}"
     "--run-dir=${PRECICE_TEST_DIR}"
+    "--timeout-normal=${PRECICE_TEST_TIMEOUT_NORMAL}"
+    "--timeout-long=${PRECICE_TEST_TIMEOUT_LONG}"
     DEPENDS testprecice
     COMMENT "Generating list of tests"
     VERBATIM)
@@ -204,6 +273,10 @@ add_custom_target(precice-test-list ALL
 add_precice_test_build_solverdummy(cpp)
 add_precice_test_build_solverdummy(c)
 add_precice_test_build_solverdummy(fortran)
+
+add_precice_test_run_mocked_solverdummy(cpp)
+add_precice_test_run_mocked_solverdummy(c)
+add_precice_test_run_mocked_solverdummy(fortran)
 
 add_precice_test_run_solverdummies(cpp cpp)
 add_precice_test_run_solverdummies(c c)
