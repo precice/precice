@@ -21,7 +21,7 @@
     <mapping:radial-geometric-multiscale
       direction="read"
       multiscale-type="spread"
-      multiscale-radius=""
+      multiscale-radius="1.0"
       multiscale-axis="z"
       from="Mesh1D"
       to="Mesh3D"
