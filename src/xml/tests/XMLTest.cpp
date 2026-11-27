@@ -1,6 +1,8 @@
 #include <Eigen/Core>
+#include <optional>
 #include <string>
 #include <tuple>
+#include <vector>
 #include "math/constants.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -69,6 +71,44 @@ BOOST_AUTO_TEST_CASE(VectorAttributes)
   BOOST_TEST(cb.eigenVectorXd(0) == 3.0);
   BOOST_TEST(cb.eigenVectorXd(1) == 2.0);
   BOOST_TEST(cb.eigenVectorXd(2) == 1.0);
+}
+
+struct OptionalAttributeHost : public XMLTag::Listener {
+  std::vector<std::optional<int>> values;
+
+  void xmlTagCallback(const ConfigurationContext &, XMLTag &callingTag) override
+  {
+    if (callingTag.getName() == "test-optional-attribute") {
+      values.push_back(callingTag.getOptionalIntAttributeValue("optional-value"));
+    }
+  }
+
+  void xmlEndTagCallback(const ConfigurationContext &, XMLTag &) override {}
+};
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(OptionalAttributeWithoutDefault)
+{
+  PRECICE_TEST();
+
+  std::string filename(getPathToSources() + "/xml/tests/config_xmltest_optional_attribute.xml");
+
+  OptionalAttributeHost cb;
+  XMLTag                rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
+  XMLTag                testTag(cb, "test-optional-attribute", XMLTag::OCCUR_ONCE_OR_MORE);
+
+  XMLAttribute<int> attrOptional("optional-value");
+  attrOptional.setOptional();
+  testTag.addAttribute(attrOptional);
+
+  rootTag.addSubtag(testTag);
+
+  configure(rootTag, ConfigurationContext{}, filename);
+
+  BOOST_TEST(cb.values.size() == 2u);
+  BOOST_TEST(cb.values[0].has_value());
+  BOOST_TEST(cb.values[0].value() == 42);
+  BOOST_TEST(!cb.values[1].has_value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
