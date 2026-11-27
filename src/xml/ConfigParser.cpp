@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <utility>
 
+#include "fmt/format.h"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "profiling/Event.hpp"
@@ -41,6 +42,17 @@ std::string decodeXML(std::string_view xml)
   return decodedXml;
 }
 
+/// class that allows passing the parser context as user data
+struct UserData {
+  ConfigParser  *parser = nullptr;
+  xmlParserCtxt *ctxt   = nullptr;
+
+  int getLine()
+  {
+    return xmlSAX2GetLineNumber(ctxt);
+  }
+};
+
 // ------------------------- Callback functions for libxml2  -------------------------
 
 void OnStartElementNs(
@@ -67,11 +79,10 @@ void OnStartElementNs(
     attributesMap[attributeName] = decodeXML(value);
   }
 
-  auto pParser = static_cast<ConfigParser *>(ctx);
-
   std::string_view sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
 
-  pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
+  auto pud = static_cast<UserData *>(ctx);
+  pud->parser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap, pud->getLine());
 }
 
 void OnEndElementNs(
@@ -80,14 +91,14 @@ void OnEndElementNs(
     const xmlChar *prefix,
     const xmlChar *URI)
 {
-  ConfigParser *pParser = static_cast<ConfigParser *>(ctx);
-  pParser->OnEndElement();
+  auto pud = static_cast<UserData *>(ctx);
+  pud->parser->OnEndElement(pud->getLine());
 }
 
 void OnCharacters(void *ctx, const xmlChar *ch, int len)
 {
-  ConfigParser *pParser = static_cast<ConfigParser *>(ctx);
-  pParser->OnTextSection(std::string(reinterpret_cast<const char *>(ch), len));
+  auto pud = static_cast<UserData *>(ctx);
+  pud->parser->OnTextSection(std::string(reinterpret_cast<const char *>(ch), len));
 }
 
 void OnStructuredErrorFunc(void *userData, const xmlError *error)
@@ -99,7 +110,8 @@ void OnStructuredErrorFunc(void *userData, const xmlError *error)
     return;
   }
 
-  ConfigParser::MessageProxy(error->level, message);
+  auto pud = static_cast<UserData *>(userData);
+  ConfigParser::MessageProxy(error->level, message, pud->getLine());
 }
 
 // Required for versions before 2.12.0 of libxml
@@ -110,12 +122,14 @@ void OnStructuredErrorFunc(void *userData, xmlError *error)
 
 void OnErrorFunc(void *userData, const char *error, ...)
 {
-  ConfigParser::MessageProxy(XML_ERR_ERROR, error);
+  auto pud = static_cast<UserData *>(userData);
+  ConfigParser::MessageProxy(XML_ERR_ERROR, error, pud->getLine());
 }
 
 void OnFatalErrorFunc(void *userData, const char *error, ...)
 {
-  ConfigParser::MessageProxy(XML_ERR_FATAL, error);
+  auto pud = static_cast<UserData *>(userData);
+  ConfigParser::MessageProxy(XML_ERR_FATAL, error, pud->getLine());
 }
 
 // ------------------------- ConfigParser implementation  -------------------------
@@ -147,18 +161,19 @@ ConfigParser::ConfigParser(std::string_view filePath)
   readXmlFile(std::string(filePath));
 }
 
-void ConfigParser::MessageProxy(int level, std::string_view mess)
+void ConfigParser::MessageProxy(int level, std::string_view mess, int line)
 {
+  auto message = precice::fmt::format("In line {}: {}", line, mess);
   switch (level) {
   case (XML_ERR_FATAL):
   case (XML_ERR_ERROR):
-    PRECICE_ERROR(mess);
+    PRECICE_ERROR(message);
     break;
   case (XML_ERR_WARNING):
-    PRECICE_WARN(mess);
+    PRECICE_WARN(message);
     break;
   default:
-    PRECICE_INFO(mess);
+    PRECICE_INFO(message);
   }
 }
 
@@ -206,17 +221,25 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.error          = OnErrorFunc;
   SAXHandler.fatalError     = OnFatalErrorFunc;
 
-  auto content = readFileContent(filePath);
+  _content = readFileContent(filePath);
 
-  _hash = utils::preciceHash(content);
+  _hash = utils::preciceHash(_content);
 
+  // Create userdata for parser first without the parser context
+  UserData userdata;
+  userdata.parser = this;
+
+  // Then create the parser context with the local userdata
   auto ctxt = std::unique_ptr<xmlParserCtxt, void (*)(xmlParserCtxtPtr)>(
-      xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
-                              content.c_str(), content.size(), nullptr),
+      xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(&userdata),
+                              _content.c_str(), _content.size(), nullptr),
       xmlFreeParserCtxt);
-
   PRECICE_CHECK(ctxt != nullptr, "XML parser was unable to create a push parser context for file \"{}\"", filePath);
 
+  // Set the parser context inside the userdata
+  userdata.ctxt = ctxt.get();
+
+  // Finally parse the input
   xmlParseChunk(ctxt.get(), nullptr, 0, 1);
 
   return 0;
@@ -271,9 +294,9 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
         matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
         std::vector<std::string> stringMatches;
         std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
-        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, fmt::join(stringMatches, ">,<"));
+        PRECICE_ERROR("The configuration contains an unknown tag <{}> on line {}. Did you mean <{}>?", expectedName, subtag->lstart, fmt::join(stringMatches, ">,<"));
       } else {
-        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Expected tags are {}.", expectedName, fmt::join(names, ", "));
+        PRECICE_ERROR("The configuration contains an unknown tag <{}> on line {}. Expected tags are {}.", expectedName, subtag->lstart, fmt::join(names, ", "));
       }
     }
 
@@ -282,18 +305,18 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 
     if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
       PRECICE_CHECK(usedTags.count(pDefSubTag->_fullName) == 0,
-                    "Tag <{}> is not allowed to occur multiple times.", pDefSubTag->_fullName);
+                    "Tag <{}> on line {} is not allowed to occur multiple times.", pDefSubTag->_fullName, subtag->lstart);
       usedTags.emplace(pDefSubTag->_fullName);
     }
 
     pDefSubTag->_configuredNamespaces[pDefSubTag->_namespace] = true;
-    pDefSubTag->readAttributes(subtag->m_aAttributes);
+    pDefSubTag->readAttributes(subtag->m_aAttributes, subtag->lstart);
     pDefSubTag->_listener.xmlTagCallback(context, *pDefSubTag);
     pDefSubTag->_configured = true;
 
     connectTags(context, pDefSubTag->_subtags, subtag->m_aSubTags);
 
-    pDefSubTag->areAllSubtagsConfigured();
+    pDefSubTag->areAllSubtagsConfigured(subtag->lstart);
     pDefSubTag->_listener.xmlEndTagCallback(context, *pDefSubTag);
   }
 }
@@ -301,13 +324,15 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 void ConfigParser::OnStartElement(
     std::string_view    localname,
     std::string_view    prefix,
-    CTag::AttributePair attributes)
+    CTag::AttributePair attributes,
+    int                 line)
 {
   auto pTag = std::make_shared<CTag>();
 
   pTag->m_Prefix      = prefix;
   pTag->m_Name        = localname;
   pTag->m_aAttributes = std::move(attributes);
+  pTag->lstart        = line;
 
   if (not m_CurrentTags.empty()) {
     auto pParentTag = m_CurrentTags.back();
@@ -318,8 +343,9 @@ void ConfigParser::OnStartElement(
   m_CurrentTags.push_back(pTag);
 }
 
-void ConfigParser::OnEndElement()
+void ConfigParser::OnEndElement(int line)
 {
+  m_CurrentTags.back()->lend = line;
   m_CurrentTags.pop_back();
 }
 

@@ -78,7 +78,7 @@ public:
     return _hasValidation;
   };
 
-  void readValue(std::string_view tagName, const std::map<std::string, std::string> &aAttributes);
+  void readValue(std::string_view tagName, const std::map<std::string, std::string> &aAttributes, int line);
 
   const std::string &getName() const
   {
@@ -158,26 +158,26 @@ XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTR
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::map<std::string, std::string> &aAttributes)
+void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::map<std::string, std::string> &aAttributes, int line)
 {
   PRECICE_TRACE(_name);
   PRECICE_ASSERT(!_read, "Attribute \"" + _name + "\" has already been read.");
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
-    PRECICE_CHECK(_hasDefaultValue, "The tag <{}> in the configuration is missing required attribute \"{}\".", tagName, _name);
+    PRECICE_CHECK(_hasDefaultValue, "The tag <{}> on line {} of the configuration is missing required attribute \"{}\".", tagName, line, _name);
     set(_value, _defaultValue);
   } else {
     try {
       readValueSpecific(position->second, _value);
     } catch (const std::exception &e) {
-      PRECICE_ERROR(e.what());
+      PRECICE_ERROR("On line {}: ", line, e.what());
     }
     if (_hasValidation) {
       if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
         std::ostringstream stream;
         stream << "Invalid value \"" << _value << "\" of attribute \""
-               << getName() << "\": ";
+               << getName() << "\" on line: " << line << ' ';
         // print first
         auto first = _options.begin();
         stream << "value must be \"" << *first << '"';
@@ -191,7 +191,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::m
       }
     }
   }
-  PRECICE_DEBUG("Read valid attribute \"{}\" value = {}", getName(), _value);
+  PRECICE_DEBUG("Read valid attribute \"{}\" on line {} value = {}", getName(), line, _value);
 }
 
 template <typename ATTRIBUTE_T>

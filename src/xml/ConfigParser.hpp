@@ -26,6 +26,8 @@ public:
     std::string m_Name;
     std::string m_Prefix;
     bool        m_Used = false;
+    int         lstart = -1;
+    int         lend   = -1;
 
     using AttributePair = std::map<std::string, std::string>;
     AttributePair                      m_aAttributes;
@@ -36,6 +38,9 @@ public:
 
 private:
   static precice::logging::Logger _log;
+
+  /// the content of the configuration file
+  std::string _content;
 
   /// the hash of the last processed config
   std::string _hash;
@@ -72,16 +77,17 @@ public:
   void OnStartElement(
       std::string_view    localname,
       std::string_view    prefix,
-      CTag::AttributePair attributes);
+      CTag::AttributePair attributes,
+      int                 line);
 
   /// Callback for End-Tag
-  void OnEndElement();
+  void OnEndElement(int line);
 
   /// Callback for text sections in xml file
   void OnTextSection(const std::string &ch);
 
   /// Proxy for error and warning messages from libxml2
-  static void MessageProxy(int level, std::string_view mess);
+  static void MessageProxy(int level, std::string_view mess, int line);
 };
 } // namespace xml
 } // namespace precice

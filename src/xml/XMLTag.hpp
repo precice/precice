@@ -200,7 +200,7 @@ public:
   }
 
   /// reads all attributes of this tag
-  void readAttributes(const std::map<std::string, std::string> &aAttributes);
+  void readAttributes(const std::map<std::string, std::string> &aAttributes, int line);
 
 private:
   mutable logging::Logger _log{"xml::XMLTag"};
@@ -232,7 +232,7 @@ private:
 
   std::map<std::string, std::string> _attributeHints;
 
-  void areAllSubtagsConfigured() const;
+  void areAllSubtagsConfigured(int line) const;
 
   void resetAttributes();
 };
