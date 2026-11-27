@@ -1,7 +1,6 @@
 #include "xml/ValueParser.hpp"
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#include <ostream>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
