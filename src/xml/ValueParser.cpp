@@ -29,7 +29,6 @@ T parseArithmetic(const std::string &rawValue, const char *typeName)
   }
   return value;
 }
-
 } // namespace
 
 void readValueSpecific(const std::string &rawValue, double &value)
