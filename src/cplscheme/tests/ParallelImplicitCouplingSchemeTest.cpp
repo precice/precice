@@ -23,6 +23,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/Configuration.hpp"
 #include "precice/config/ParticipantConfiguration.hpp"
 #include "testing/ParallelCouplingSchemeFixture.hpp"
 #include "testing/TestContext.hpp"
@@ -196,6 +197,18 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 }
 
 #endif // not PRECICE_NO_MPI
+
+// A convergence measure on data the mesh does not use must raise an error instead of crashing, see #2291
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(ConvergenceMeasureUndefinedData)
+{
+  PRECICE_TEST();
+  std::string           file(testing::getPathToSources() + "/cplscheme/tests/multi-convergence-measure-undefined-data.xml");
+  config::Configuration config;
+  BOOST_CHECK_EXCEPTION(xml::configure(config.getXMLTag(), xml::ConfigurationContext{"A", 0, 1}, file),
+                        ::precice::Error,
+                        testing::errorContains(R"(Data "NOT_DEFINED" used by mesh "MeshA" is not configured.)"));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
