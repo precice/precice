@@ -46,6 +46,11 @@ std::string decodeXML(std::string_view xml)
 struct UserData {
   ConfigParser  *parser = nullptr;
   xmlParserCtxt *ctxt   = nullptr;
+
+  int getLine()
+  {
+    return xmlSAX2GetLineNumber(ctxt);
+  }
 };
 
 // ------------------------- Callback functions for libxml2  -------------------------
@@ -77,7 +82,7 @@ void OnStartElementNs(
   std::string_view sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
 
   auto pud = static_cast<UserData *>(ctx);
-  pud->parser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
+  pud->parser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap, pud->getLine());
 }
 
 void OnEndElementNs(
@@ -87,7 +92,7 @@ void OnEndElementNs(
     const xmlChar *URI)
 {
   auto pud = static_cast<UserData *>(ctx);
-  pud->parser->OnEndElement();
+  pud->parser->OnEndElement(pud->getLine());
 }
 
 void OnCharacters(void *ctx, const xmlChar *ch, int len)
@@ -95,14 +100,6 @@ void OnCharacters(void *ctx, const xmlChar *ch, int len)
   auto pud = static_cast<UserData *>(ctx);
   pud->parser->OnTextSection(std::string(reinterpret_cast<const char *>(ch), len));
 }
-
-namespace {
-int lineFromContext(void *userData)
-{
-  auto pud = static_cast<UserData *>(userData);
-  return xmlSAX2GetLineNumber(pud->ctxt);
-}
-} // namespace
 
 void OnStructuredErrorFunc(void *userData, const xmlError *error)
 {
@@ -113,7 +110,8 @@ void OnStructuredErrorFunc(void *userData, const xmlError *error)
     return;
   }
 
-  ConfigParser::MessageProxy(error->level, message, lineFromContext(userData));
+  auto pud = static_cast<UserData *>(userData);
+  ConfigParser::MessageProxy(error->level, message, pud->getLine());
 }
 
 // Required for versions before 2.12.0 of libxml
@@ -124,12 +122,14 @@ void OnStructuredErrorFunc(void *userData, xmlError *error)
 
 void OnErrorFunc(void *userData, const char *error, ...)
 {
-  ConfigParser::MessageProxy(XML_ERR_ERROR, error, lineFromContext(userData));
+  auto pud = static_cast<UserData *>(userData);
+  ConfigParser::MessageProxy(XML_ERR_ERROR, error, pud->getLine());
 }
 
 void OnFatalErrorFunc(void *userData, const char *error, ...)
 {
-  ConfigParser::MessageProxy(XML_ERR_FATAL, error, lineFromContext(userData));
+  auto pud = static_cast<UserData *>(userData);
+  ConfigParser::MessageProxy(XML_ERR_FATAL, error, pud->getLine());
 }
 
 // ------------------------- ConfigParser implementation  -------------------------
@@ -324,13 +324,15 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 void ConfigParser::OnStartElement(
     std::string_view    localname,
     std::string_view    prefix,
-    CTag::AttributePair attributes)
+    CTag::AttributePair attributes,
+    int                 line)
 {
   auto pTag = std::make_shared<CTag>();
 
   pTag->m_Prefix      = prefix;
   pTag->m_Name        = localname;
   pTag->m_aAttributes = std::move(attributes);
+  pTag->lstart        = line;
 
   if (not m_CurrentTags.empty()) {
     auto pParentTag = m_CurrentTags.back();
@@ -341,8 +343,9 @@ void ConfigParser::OnStartElement(
   m_CurrentTags.push_back(pTag);
 }
 
-void ConfigParser::OnEndElement()
+void ConfigParser::OnEndElement(int line)
 {
+  m_CurrentTags.back()->lend = line;
   m_CurrentTags.pop_back();
 }
 

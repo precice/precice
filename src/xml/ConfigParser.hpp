@@ -26,6 +26,8 @@ public:
     std::string m_Name;
     std::string m_Prefix;
     bool        m_Used = false;
+    int         lstart = -1;
+    int         lend   = -1;
 
     using AttributePair = std::map<std::string, std::string>;
     AttributePair                      m_aAttributes;
@@ -75,10 +77,11 @@ public:
   void OnStartElement(
       std::string_view    localname,
       std::string_view    prefix,
-      CTag::AttributePair attributes);
+      CTag::AttributePair attributes,
+      int                 line);
 
   /// Callback for End-Tag
-  void OnEndElement();
+  void OnEndElement(int line);
 
   /// Callback for text sections in xml file
   void OnTextSection(const std::string &ch);
