@@ -11,6 +11,68 @@ using namespace precice::xml;
 BOOST_AUTO_TEST_SUITE(XML)
 BOOST_AUTO_TEST_SUITE(ValueParser)
 
+BOOST_AUTO_TEST_SUITE(RejectEmpty)
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(Double)
+{
+  PRECICE_TEST();
+  double value = -1.0;
+  BOOST_CHECK_THROW(readValueSpecific("", value), std::runtime_error);
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(Int)
+{
+  PRECICE_TEST();
+  int value = -1.0;
+  BOOST_CHECK_THROW(readValueSpecific("", value), std::runtime_error);
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(Vector)
+{
+  PRECICE_TEST();
+  Eigen::VectorXd value{};
+  BOOST_CHECK_THROW(readValueSpecific("", value), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(RejectWhitespace)
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(Double)
+{
+  PRECICE_TEST();
+  double value = -1.0;
+  BOOST_CHECK_THROW(readValueSpecific(" ", value), std::runtime_error);
+  BOOST_CHECK_THROW(readValueSpecific("  ", value), std::runtime_error);
+  BOOST_CHECK_THROW(readValueSpecific("\t", value), std::runtime_error);
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(Int)
+{
+  PRECICE_TEST();
+  int value = -1.0;
+  BOOST_CHECK_THROW(readValueSpecific(" ", value), std::runtime_error);
+  BOOST_CHECK_THROW(readValueSpecific("  ", value), std::runtime_error);
+  BOOST_CHECK_THROW(readValueSpecific("\t", value), std::runtime_error);
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(Vector)
+{
+  PRECICE_TEST();
+  Eigen::VectorXd value{};
+  BOOST_CHECK_THROW(readValueSpecific(" ", value), std::runtime_error);
+  BOOST_CHECK_THROW(readValueSpecific("  ", value), std::runtime_error);
+  BOOST_CHECK_THROW(readValueSpecific("\t", value), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ParseDouble)
 {
@@ -34,18 +96,6 @@ BOOST_AUTO_TEST_CASE(ParseDouble)
 }
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(ParseDoubleRejectsEmpty)
-{
-  PRECICE_TEST();
-  double value = -1.0;
-
-  // An empty or whitespace-only value used to leave `value` indeterminate without
-  // raising an error, because the failed extraction also sets eofbit.
-  BOOST_CHECK_THROW(readValueSpecific("", value), std::runtime_error);
-  BOOST_CHECK_THROW(readValueSpecific("   ", value), std::runtime_error);
-}
-
-PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ParseDoubleRejectsMalformed)
 {
   PRECICE_TEST();
@@ -53,6 +103,8 @@ BOOST_AUTO_TEST_CASE(ParseDoubleRejectsMalformed)
 
   BOOST_CHECK_THROW(readValueSpecific("abc", value), std::runtime_error);
   BOOST_CHECK_THROW(readValueSpecific("1.0foo", value), std::runtime_error);
+  BOOST_CHECK_THROW(readValueSpecific("1 2", value), std::runtime_error);
+  BOOST_CHECK_THROW(readValueSpecific("1,2", value), std::runtime_error);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -63,8 +115,12 @@ BOOST_AUTO_TEST_CASE(ParseInt)
 
   readValueSpecific("42", value);
   BOOST_TEST(value == 42);
+  readValueSpecific("43 ", value);
+  BOOST_TEST(value == 43);
   readValueSpecific("-7", value);
   BOOST_TEST(value == -7);
+  readValueSpecific(" 10 ", value);
+  BOOST_TEST(value == 10);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -72,11 +128,9 @@ BOOST_AUTO_TEST_CASE(ParseIntRejectsMalformed)
 {
   PRECICE_TEST();
   int value = -1;
-
-  BOOST_CHECK_THROW(readValueSpecific("", value), std::runtime_error);
-  BOOST_CHECK_THROW(readValueSpecific("   ", value), std::runtime_error);
   BOOST_CHECK_THROW(readValueSpecific("abc", value), std::runtime_error);
   BOOST_CHECK_THROW(readValueSpecific("1.5", value), std::runtime_error);
+  BOOST_CHECK_THROW(readValueSpecific("1 5", value), std::runtime_error);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -105,9 +159,7 @@ BOOST_AUTO_TEST_CASE(ParseVectorRejectsMalformedComponent)
   Eigen::VectorXd value;
 
   BOOST_CHECK_THROW(readValueSpecific("1;abc", value), std::runtime_error);
-  // A whitespace-only component is a token of its own and used to be accepted silently.
   BOOST_CHECK_THROW(readValueSpecific("1; ;2", value), std::runtime_error);
-  BOOST_CHECK_THROW(readValueSpecific("", value), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
