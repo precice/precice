@@ -27,7 +27,6 @@ BOOST_AUTO_TEST_CASE(ParseDouble)
   BOOST_TEST(value == 1000.0);
 }
 
-
 PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ParseDoubleRejectsEmpty)
 {
@@ -49,7 +48,6 @@ BOOST_AUTO_TEST_CASE(ParseDoubleRejectsMalformed)
   BOOST_CHECK_THROW(readValueSpecific("abc", value), std::runtime_error);
   BOOST_CHECK_THROW(readValueSpecific("1.0foo", value), std::runtime_error);
 }
-
 
 PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ParseInt)
