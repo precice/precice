@@ -7,6 +7,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/Configuration.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "xml/XMLTag.hpp"
@@ -475,6 +476,22 @@ BOOST_AUTO_TEST_CASE(RBFPUMOpenMPConfiguration)
 }
 #endif
 #endif
+
+// Geometric multiscale mappings only restrict the participant that defines them, see #1966
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(GeoMultiscaleParallelOtherParticipant)
+{
+  PRECICE_TEST();
+  std::string file(testing::getPathToSources() + "/mapping/tests/mapping-geomultiscale-parallel-config.xml");
+
+  // A runs in parallel and does not use the multiscale mapping of C
+  config::Configuration configA;
+  BOOST_CHECK_NO_THROW(xml::configure(configA.getXMLTag(), xml::ConfigurationContext{"A", 0, 2}, file));
+
+  // C itself cannot run in parallel
+  config::Configuration configC;
+  BOOST_CHECK_THROW(xml::configure(configC.getXMLTag(), xml::ConfigurationContext{"C", 0, 2}, file), ::precice::Error);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

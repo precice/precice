@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="on">
+  <data:scalar name="DataA" />
+  <data:scalar name="DataB" />
+
+  <mesh name="MeshA" dimensions="3">
+    <use-data name="DataA" />
+  </mesh>
+
+  <mesh name="MeshB" dimensions="3">
+    <use-data name="DataA" />
+    <use-data name="DataB" />
+  </mesh>
+
+  <mesh name="MeshC" dimensions="3">
+    <use-data name="DataB" />
+  </mesh>
+
+  <participant name="A">
+    <provide-mesh name="MeshA" />
+    <write-data name="DataA" mesh="MeshA" />
+  </participant>
+
+  <participant name="B">
+    <provide-mesh name="MeshB" />
+    <receive-mesh name="MeshA" from="A" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshB" constraint="consistent" />
+    <read-data name="DataA" mesh="MeshB" />
+    <write-data name="DataB" mesh="MeshB" />
+  </participant>
+
+  <participant name="C">
+    <provide-mesh name="MeshC" />
+    <receive-mesh name="MeshB" from="B" />
+    <mapping:axial-geometric-multiscale
+      direction="read"
+      multiscale-dimension="1d-3d"
+      multiscale-type="collect"
+      multiscale-radius="1.0"
+      multiscale-axis="z"
+      from="MeshB"
+      to="MeshC"
+      constraint="consistent" />
+    <read-data name="DataB" mesh="MeshC" />
+  </participant>
+
+  <m2n:sockets acceptor="A" connector="B" />
+  <m2n:sockets acceptor="B" connector="C" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="A" second="B" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="DataA" mesh="MeshA" from="A" to="B" />
+  </coupling-scheme:serial-explicit>
+
+  <coupling-scheme:serial-explicit>
+    <participants first="B" second="C" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="DataB" mesh="MeshB" from="B" to="C" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>
