@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
   rootTag.addSubtag(testcaseTag);
 
   auto hash = configure(rootTag, ConfigurationContext{}, filename);
-  BOOST_TEST(hash == "60a732f93a3a52eea0b33582a0ce0e92");
+  BOOST_TEST(hash == "658c2fd621ed5a63984ea0f752148ec1");
 
   BOOST_TEST(cb.boolValue == true);
   BOOST_TEST(cb.doubleValue == 3.1);
