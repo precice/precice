@@ -14,17 +14,26 @@ constexpr static const char *PARSING_LOCALE = "en_US.UTF-8";
 template <typename T>
 T parseArithmetic(const std::string &rawValue, const char *typeName)
 {
-  std::istringstream iss{rawValue};
+  if (rawValue.empty()) {
+    throw std::runtime_error{std::string("Could not parse an empty string as ") + typeName + "."};
+  }
+
+  std::string trimmed = rawValue;
+  boost::trim(trimmed);
+
+  if (trimmed.empty()) {
+    throw std::runtime_error{std::string("Could not parse whitespaces as ") + typeName + "."};
+  }
+
+  std::istringstream iss{trimmed};
   try {
     iss.imbue(std::locale(PARSING_LOCALE));
   } catch (...) {
   }
   T value{};
   iss >> value;
-  // An empty or whitespace-only string makes the sentry fail, which sets eofbit alongside
-  // failbit and leaves value untouched. Checking eof() alone therefore misses these.
-  if (iss.fail() || !iss.eof()) {
-    throw std::runtime_error{"Could not fully parse value \"" + rawValue + "\" as " + typeName + "."};
+  if (iss.fail()) {
+    throw std::runtime_error{"Could not parse value \"" + rawValue + "\" as " + typeName + "."};
   }
   return value;
 }
@@ -49,7 +58,6 @@ void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
 
   Eigen::VectorXd vec(size);
   for (Eigen::Index i = 0; i != size; ++i) {
-    boost::trim(components[i]);
     vec(i) = parseArithmetic<double>(components[i], "a double");
   }
   value = vec;

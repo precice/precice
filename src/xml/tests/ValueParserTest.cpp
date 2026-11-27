@@ -19,6 +19,12 @@ BOOST_AUTO_TEST_CASE(ParseDouble)
 
   readValueSpecific("1.0", value);
   BOOST_TEST(value == 1.0);
+  readValueSpecific(" 1.1", value);
+  BOOST_TEST(value == 1.1);
+  readValueSpecific("1.2 ", value);
+  BOOST_TEST(value == 1.2);
+  readValueSpecific(" 1.3 ", value);
+  BOOST_TEST(value == 1.3);
   readValueSpecific("3", value);
   BOOST_TEST(value == 3.0);
   readValueSpecific("-2.5", value);
@@ -84,6 +90,12 @@ BOOST_AUTO_TEST_CASE(ParseVector)
   BOOST_TEST(value(0) == 3.0);
   BOOST_TEST(value(1) == 2.0);
   BOOST_TEST(value(2) == 1.0);
+
+  readValueSpecific("4 ; 5 ; 6", value);
+  BOOST_TEST(value.size() == 3);
+  BOOST_TEST(value(0) == 4.0);
+  BOOST_TEST(value(1) == 5.0);
+  BOOST_TEST(value(2) == 6.0);
 }
 
 PRECICE_TEST_SETUP(1_rank)
