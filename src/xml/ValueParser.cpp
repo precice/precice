@@ -29,15 +29,11 @@ T parseArithmetic(const std::string &rawValue, const char *typeName)
   return value;
 }
 
-double parseDouble(const std::string &rawValue)
-{
-  return parseArithmetic<double>(rawValue, "a double");
-}
 } // namespace
 
 void readValueSpecific(const std::string &rawValue, double &value)
 {
-  value = parseDouble(rawValue);
+  value = parseArithmetic<double>(rawValue, "a double");
 }
 
 void readValueSpecific(const std::string &rawValue, int &value)
@@ -54,7 +50,7 @@ void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
 
   Eigen::VectorXd vec(size);
   for (Eigen::Index i = 0; i != size; ++i) {
-    vec(i) = parseDouble(components[i]);
+    vec(i) = parseArithmetic<double>(components[i], "a double");
   }
   value = vec;
 }
