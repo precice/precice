@@ -327,6 +327,15 @@ void ParticipantImpl::setupCommunication()
     auto &mesh = *context.mesh;
     Event e("preprocess." + mesh.getName());
     mesh.preprocess();
+    // Only the local partition is checked: duplicates across ranks are valid, see distributed meshes
+    if (const auto duplicates = mesh::findDuplicateVertexCoords(mesh); !duplicates.empty()) {
+      constexpr std::size_t              maxShown = 10;
+      const std::vector<Eigen::VectorXd> shown(duplicates.begin(), duplicates.begin() + std::min(duplicates.size(), maxShown));
+      PRECICE_WARN("Mesh \"{}\" contains multiple vertices at the same coordinates at {} location(s). "
+                   "This can lead to failing or wrong mappings, for example with RBF mappings. "
+                   "Please remove the duplicate vertices at these coordinates{}: {}",
+                   mesh.getName(), duplicates.size(), (duplicates.size() > maxShown ? " (first 10 shown)" : ""), shown);
+    }
   }
 
   // Setup communication
