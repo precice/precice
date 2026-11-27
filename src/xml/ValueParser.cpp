@@ -32,7 +32,7 @@ T parseArithmetic(const std::string &rawValue, const char *typeName)
   }
   T value{};
   iss >> value;
-  if (iss.fail()) {
+  if (iss.fail() || !iss.eof()) {
     throw std::runtime_error{"Could not parse value \"" + rawValue + "\" as " + typeName + "."};
   }
   return value;
