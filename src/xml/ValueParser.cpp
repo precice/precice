@@ -48,8 +48,6 @@ void readValueSpecific(const std::string &rawValue, int &value)
 void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
 {
   std::vector<std::string> components;
-  // Do NOT use token_compress_on: it would silently drop an empty-string input,
-  // producing zero components and bypassing the error check in parseDouble.
   boost::split(
       components, rawValue, [](char c) { return c == ';'; });
   const Eigen::Index size = static_cast<Eigen::Index>(components.size());
