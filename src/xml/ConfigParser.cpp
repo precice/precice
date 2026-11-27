@@ -310,7 +310,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
     }
 
     pDefSubTag->_configuredNamespaces[pDefSubTag->_namespace] = true;
-    pDefSubTag->readAttributes(subtag->m_aAttributes);
+    pDefSubTag->readAttributes(subtag->m_aAttributes, subtag->lstart);
     pDefSubTag->_listener.xmlTagCallback(context, *pDefSubTag);
     pDefSubTag->_configured = true;
 

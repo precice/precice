@@ -181,7 +181,7 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name) 
   PRECICE_UNREACHABLE("The XMLAttribute doesn't exist, check its default.");
 }
 
-void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttributes)
+void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttributes, int line)
 {
   PRECICE_TRACE();
 
@@ -195,7 +195,7 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
     // check existing hints
     if (auto pos = _attributeHints.find(name);
         pos != _attributeHints.end()) {
-      PRECICE_ERROR("The tag <{}> in the configuration contains the attribute \"{}\". {}", _fullName, name, pos->second);
+      PRECICE_ERROR("The tag <{}> on line {} of the configuration contains the attribute \"{}\". {}", _fullName, line, name, pos->second);
     }
 
     auto expected = getAttributeNames();
@@ -204,15 +204,15 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
       matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
       std::vector<std::string> stringMatches;
       std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
-      PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Did you mean \"{}\"?", _fullName, name, fmt::join(stringMatches, ", "));
+      PRECICE_ERROR("The tag <{}> on line {} of the configuration contains an unknown attribute \"{}\". Did you mean \"{}\"?", _fullName, line, name, fmt::join(stringMatches, ", "));
     }
-    PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, name, fmt::join(expected, ", "));
+    PRECICE_ERROR("The tag <{}> on line {} of the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, line, name, fmt::join(expected, ", "));
   }
 
   // Read all attributes
   for (auto &attribute : _attributes) {
     std::visit(
-        [this, &aAttributes](auto &attribute) { attribute.readValue(_fullName, aAttributes); },
+        [this, &aAttributes, line](auto &attribute) { attribute.readValue(_fullName, aAttributes, line); },
         attribute);
   }
 }
