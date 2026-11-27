@@ -21,3 +21,8 @@ precice_test_config_valid(exporter-empty.xml)
 precice_test_config_valid(exporter-provided.xml)
 precice_test_config_valid(exporter-received.xml)
 precice_test_config_invalid(exporter-unavailable.xml "is not known to this participant")
+
+if (NOT PRECICE_FEATURE_PETSC_MAPPING)
+  precice_test_config_valid(issue-2588-repro.xml Participant-Two)
+  precice_test_config_invalid(issue-2588-repro.xml "global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled" Participant-One)
+endif()

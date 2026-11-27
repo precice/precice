@@ -431,7 +431,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // This for loop transforms the MappingConfiguration::ConfiguredMappings
   // into a MappingContext
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
-  for (const ConfMapping &confMapping : _mappingConfig->mappings()) {
+  const bool ownsMappings = context.name == participant->getName();
+  for (ConfMapping &confMapping : _mappingConfig->mappings()) {
+
+    if (ownsMappings && confMapping.requiresBasisFunction && confMapping.mapping == nullptr) {
+      _mappingConfig->finishRBFConfiguration(confMapping);
+    }
 
     checkIllDefinedMappings(confMapping, participant);
 
@@ -465,17 +470,17 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     if (context.size > 1 && context.name == participant->getName()) {
       if ((confMapping.direction == mapping::MappingConfiguration::WRITE &&
-           confMapping.mapping->getConstraint() == mapping::Mapping::CONSISTENT) ||
+           confMapping.constraint == mapping::Mapping::CONSISTENT) ||
           (confMapping.direction == mapping::MappingConfiguration::READ &&
-           confMapping.mapping->getConstraint() == mapping::Mapping::CONSERVATIVE)) {
+           confMapping.constraint == mapping::Mapping::CONSERVATIVE)) {
         PRECICE_ERROR("For a parallel participant, only the mapping combinations read-consistent and write-conservative are allowed");
-      } else if (confMapping.mapping->isScaledConsistent()) {
+      } else if (confMapping.isScaledConsistent) {
         PRECICE_ERROR("Scaled consistent mapping is not yet supported for a parallel participant. "
                       "You could run in serial or use a plain (read-)consistent mapping instead.");
       }
     }
 
-    PRECICE_CHECK(!confMapping.mapping->isScaledConsistent() || !(confMapping.fromMesh->isJustInTime() || confMapping.toMesh->isJustInTime()),
+    PRECICE_CHECK(!confMapping.isScaledConsistent || !(confMapping.fromMesh->isJustInTime() || confMapping.toMesh->isJustInTime()),
                   "The just-in-time mapping from mesh \"{}\" to mesh \"{}\" was configured with a scaled-consistent constraint. A scaled-consistent constraint is not implemented for just-in-time mappings in preCICE.", confMapping.fromMesh->getName(), confMapping.toMesh->getName());
 
     // We disable the geometric filter for any kernel method, as the default safety factor is not reliable enough to provide a robust
@@ -493,6 +498,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           participant->receivedMeshContext(toMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
         }
       }
+    }
+
+    if (!ownsMappings) {
+      continue;
     }
 
     // Now we create the mappingContext, which will be stored permanently
