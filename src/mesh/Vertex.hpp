@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <utility>
 
@@ -144,6 +145,15 @@ inline bool Vertex::operator!=(const Vertex &rhs) const
 inline bool Vertex::operator<(const Vertex &rhs) const
 {
   return _id < rhs._id;
+}
+
+/// Euclidean norm of a - b, i.e. the distance between two raw coordinates
+inline double norm(Vertex::RawCoords a, Vertex::RawCoords b)
+{
+  const double d0 = a[0] - b[0];
+  const double d1 = a[1] - b[1];
+  const double d2 = a[2] - b[2];
+  return std::sqrt(d0 * d0 + d1 * d1 + d2 * d2);
 }
 
 /// Make Vertex printable
