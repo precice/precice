@@ -37,6 +37,9 @@ public:
 private:
   static precice::logging::Logger _log;
 
+  /// the content of the configuration file
+  std::string _content;
+
   /// the hash of the last processed config
   std::string _hash;
 
@@ -81,7 +84,7 @@ public:
   void OnTextSection(const std::string &ch);
 
   /// Proxy for error and warning messages from libxml2
-  static void MessageProxy(int level, std::string_view mess);
+  static void MessageProxy(int level, std::string_view mess, int line);
 };
 } // namespace xml
 } // namespace precice

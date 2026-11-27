@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <utility>
 
+#include "fmt/format.h"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "profiling/Event.hpp"
@@ -41,6 +42,12 @@ std::string decodeXML(std::string_view xml)
   return decodedXml;
 }
 
+/// class that allows passing the parser context as user data
+struct UserData {
+  ConfigParser  *parser = nullptr;
+  xmlParserCtxt *ctxt   = nullptr;
+};
+
 // ------------------------- Callback functions for libxml2  -------------------------
 
 void OnStartElementNs(
@@ -67,11 +74,10 @@ void OnStartElementNs(
     attributesMap[attributeName] = decodeXML(value);
   }
 
-  auto pParser = static_cast<ConfigParser *>(ctx);
-
   std::string_view sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
 
-  pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
+  auto pud = static_cast<UserData *>(ctx);
+  pud->parser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
 }
 
 void OnEndElementNs(
@@ -80,15 +86,23 @@ void OnEndElementNs(
     const xmlChar *prefix,
     const xmlChar *URI)
 {
-  ConfigParser *pParser = static_cast<ConfigParser *>(ctx);
-  pParser->OnEndElement();
+  auto pud = static_cast<UserData *>(ctx);
+  pud->parser->OnEndElement();
 }
 
 void OnCharacters(void *ctx, const xmlChar *ch, int len)
 {
-  ConfigParser *pParser = static_cast<ConfigParser *>(ctx);
-  pParser->OnTextSection(std::string(reinterpret_cast<const char *>(ch), len));
+  auto pud = static_cast<UserData *>(ctx);
+  pud->parser->OnTextSection(std::string(reinterpret_cast<const char *>(ch), len));
 }
+
+namespace {
+int lineFromContext(void *userData)
+{
+  auto pud = static_cast<UserData *>(userData);
+  return xmlSAX2GetLineNumber(pud->ctxt);
+}
+} // namespace
 
 void OnStructuredErrorFunc(void *userData, const xmlError *error)
 {
@@ -99,7 +113,7 @@ void OnStructuredErrorFunc(void *userData, const xmlError *error)
     return;
   }
 
-  ConfigParser::MessageProxy(error->level, message);
+  ConfigParser::MessageProxy(error->level, message, lineFromContext(userData));
 }
 
 // Required for versions before 2.12.0 of libxml
@@ -110,12 +124,12 @@ void OnStructuredErrorFunc(void *userData, xmlError *error)
 
 void OnErrorFunc(void *userData, const char *error, ...)
 {
-  ConfigParser::MessageProxy(XML_ERR_ERROR, error);
+  ConfigParser::MessageProxy(XML_ERR_ERROR, error, lineFromContext(userData));
 }
 
 void OnFatalErrorFunc(void *userData, const char *error, ...)
 {
-  ConfigParser::MessageProxy(XML_ERR_FATAL, error);
+  ConfigParser::MessageProxy(XML_ERR_FATAL, error, lineFromContext(userData));
 }
 
 // ------------------------- ConfigParser implementation  -------------------------
@@ -147,18 +161,19 @@ ConfigParser::ConfigParser(std::string_view filePath)
   readXmlFile(std::string(filePath));
 }
 
-void ConfigParser::MessageProxy(int level, std::string_view mess)
+void ConfigParser::MessageProxy(int level, std::string_view mess, int line)
 {
+  auto message = precice::fmt::format("In line {}: {}", line, mess);
   switch (level) {
   case (XML_ERR_FATAL):
   case (XML_ERR_ERROR):
-    PRECICE_ERROR(mess);
+    PRECICE_ERROR(message);
     break;
   case (XML_ERR_WARNING):
-    PRECICE_WARN(mess);
+    PRECICE_WARN(message);
     break;
   default:
-    PRECICE_INFO(mess);
+    PRECICE_INFO(message);
   }
 }
 
@@ -206,17 +221,25 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.error          = OnErrorFunc;
   SAXHandler.fatalError     = OnFatalErrorFunc;
 
-  auto content = readFileContent(filePath);
+  _content = readFileContent(filePath);
 
-  _hash = utils::preciceHash(content);
+  _hash = utils::preciceHash(_content);
 
+  // Create userdata for parser first without the parser context
+  UserData userdata;
+  userdata.parser = this;
+
+  // Then create the parser context with the local userdata
   auto ctxt = std::unique_ptr<xmlParserCtxt, void (*)(xmlParserCtxtPtr)>(
-      xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
-                              content.c_str(), content.size(), nullptr),
+      xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(&userdata),
+                              _content.c_str(), _content.size(), nullptr),
       xmlFreeParserCtxt);
-
   PRECICE_CHECK(ctxt != nullptr, "XML parser was unable to create a push parser context for file \"{}\"", filePath);
 
+  // Set the parser context inside the userdata
+  userdata.ctxt = ctxt.get();
+
+  // Finally parse the input
   xmlParseChunk(ctxt.get(), nullptr, 0, 1);
 
   return 0;
