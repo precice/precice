@@ -226,7 +226,7 @@ std::vector<std::string> XMLTag::getAttributeNames() const
   return names;
 }
 
-void XMLTag::areAllSubtagsConfigured() const
+void XMLTag::areAllSubtagsConfigured(int line) const
 {
   for (const auto &tag : _subtags) {
     std::string ns         = tag->_namespace;
@@ -244,9 +244,9 @@ void XMLTag::areAllSubtagsConfigured() const
     if ((not configured) && (occurOnce || occurOnceOrMore)) {
 
       if (tag->getNamespace().empty()) {
-        PRECICE_ERROR("Tag <{}> was not found but is required to occur at least once.", tag->getName());
+        PRECICE_ERROR("Tag <{}> on line {} expected one subtag <{}> but it was not found.", getName(), line, tag->getName());
       } else {
-        PRECICE_ERROR("Tag <{}:... > was not found but is required to occur at least once.", tag->getNamespace());
+        PRECICE_ERROR("Tag <{}> on line {} expected one subtag <{}:... > but it was not found.", getName(), line, tag->getNamespace());
       }
     }
   }

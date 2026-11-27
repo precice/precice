@@ -232,7 +232,7 @@ private:
 
   std::map<std::string, std::string> _attributeHints;
 
-  void areAllSubtagsConfigured() const;
+  void areAllSubtagsConfigured(int line) const;
 
   void resetAttributes();
 };

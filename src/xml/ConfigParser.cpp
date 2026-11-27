@@ -316,7 +316,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 
     connectTags(context, pDefSubTag->_subtags, subtag->m_aSubTags);
 
-    pDefSubTag->areAllSubtagsConfigured();
+    pDefSubTag->areAllSubtagsConfigured(subtag->lstart);
     pDefSubTag->_listener.xmlEndTagCallback(context, *pDefSubTag);
   }
 }
