@@ -294,9 +294,9 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
         matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
         std::vector<std::string> stringMatches;
         std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
-        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, fmt::join(stringMatches, ">,<"));
+        PRECICE_ERROR("The configuration contains an unknown tag <{}> on line {}. Did you mean <{}>?", expectedName, subtag->lstart, fmt::join(stringMatches, ">,<"));
       } else {
-        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Expected tags are {}.", expectedName, fmt::join(names, ", "));
+        PRECICE_ERROR("The configuration contains an unknown tag <{}> on line {}. Expected tags are {}.", expectedName, subtag->lstart, fmt::join(names, ", "));
       }
     }
 
@@ -305,7 +305,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 
     if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
       PRECICE_CHECK(usedTags.count(pDefSubTag->_fullName) == 0,
-                    "Tag <{}> is not allowed to occur multiple times.", pDefSubTag->_fullName);
+                    "Tag <{}> on line {} is not allowed to occur multiple times.", pDefSubTag->_fullName, subtag->lstart);
       usedTags.emplace(pDefSubTag->_fullName);
     }
 
