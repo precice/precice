@@ -1,5 +1,6 @@
 #include "xml/ValueParser.hpp"
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
@@ -50,6 +51,7 @@ void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
 
   Eigen::VectorXd vec(size);
   for (Eigen::Index i = 0; i != size; ++i) {
+    boost::trim(components[i]);
     vec(i) = parseArithmetic<double>(components[i], "a double");
   }
   value = vec;
